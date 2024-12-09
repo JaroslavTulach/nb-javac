@@ -412,3 +412,9 @@ $list.getLast() :: $list instanceof java.util.List
 =>
 $list.get($list.size() - 1)
 ;;
+
+java.util.SequencedSet => java.util.LinkedHashSet;;
+$mods$ $type<$T> fvs = $init$; :: inClass("com.sun.tools.javac.comp.CaptureScanner")
+=>
+$mods$ java.util.LinkedHashSet<$T> fvs = $init$;
+;;
