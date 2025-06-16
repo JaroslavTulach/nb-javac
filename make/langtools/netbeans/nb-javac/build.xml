@@ -166,6 +166,11 @@
             <arg value="${src.dir}/java.compiler/share/classes"/>
             <arg value="${src.dir}/jdk.compiler/share/classes"/>
         </java>
+        <exec failonerror="true" executable="patch" dir="${src.dir}">
+            <arg value="-p1"/>
+            <arg value="-i"/>
+            <arg value="${src.dir}/../temporary-patches/unnamed-workaround"/>
+        </exec>
         <echo file="${src.dir}/jackpot-done">Jackpot done!</echo>
     </target>
 

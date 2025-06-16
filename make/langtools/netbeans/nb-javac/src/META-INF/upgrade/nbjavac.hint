@@ -105,6 +105,18 @@ $1.isEmpty() :: $1 instanceof java.util.Optional
 !$1.isPresent()
 ;;
 
+//TODO:
+//should be:
+//$1.stream() :: $1 instanceof java.util.Optional
+//=>
+//nbjavac.VMWrapper.optional2Stream($1)
+//;;
+//but that does not work in DeferredLintHandler:
+java.util.Optional.of($p1).map($p2).stream()
+=>
+nbjavac.VMWrapper.optional2Stream(java.util.Optional.of($p1).map($p2))
+;;
+
 java.util.Objects.requireNonNullElse($obj, $def)
 =>
 nbjavac.ObjectsWrapper.requireNonNullElse($obj, $def)
@@ -236,6 +248,11 @@ java.nio.file.FileSystems.newFileSystem($path, $a2)
 :: inClass("com.sun.tools.javac.platform.JDKPlatformProvider")
 =>
 nbjavac.VMWrapper.pathFs($path)
+;;
+
+java.nio.file.FileSystems.newFileSystem($path, $env, $classloader) :: $path instanceof java.nio.file.Path
+=>
+java.nio.file.FileSystems.newFileSystem($path.toUri(), $env, $classloader)
 ;;
 
 /*
