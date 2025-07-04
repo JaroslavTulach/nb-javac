@@ -46,7 +46,9 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 public class VMWrapper {
     private VMWrapper() {
@@ -184,5 +186,9 @@ public class VMWrapper {
                 return p.getFileSystem().newWatchService();
             }
         };
+    }
+
+    public static <T> Stream<T> optional2Stream(Optional<T> opt) {
+        return opt.isPresent()? Stream.of(opt.get()) : Stream.empty();
     }
 }
