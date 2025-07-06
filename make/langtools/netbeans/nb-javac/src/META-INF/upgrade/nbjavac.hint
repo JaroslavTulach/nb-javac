@@ -252,7 +252,7 @@ nbjavac.VMWrapper.pathFs($path)
 
 java.nio.file.FileSystems.newFileSystem($path, $env, $classloader) :: $path instanceof java.nio.file.Path
 =>
-java.nio.file.FileSystems.newFileSystem($path.toUri(), $env, $classloader)
+nbjavac.FileSystemsWrapper.newFileSystem($path, $env, $classloader)
 ;;
 
 /*
