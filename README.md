@@ -1,18 +1,19 @@
-# About nb-javac!
+# Run Latest Java Compiler on old JDKs!
 _nb-javac_ is a backport of OpenJDK "javac", i.e., the Java compiler. _nbjavac_
 takes sources from the latest JDK and backports them to run on JDK8+.
-The _nb-javac_ has long been part of NetBeans, providing a highly tuned Java compiler
-specifically for the Java editor i.e., parsing and lexing for features
-such as syntax coloring, code completion. 
+It allows to run the latest OpenJDK compiler on older JDKs - as old
+as JDK8 while being 1:1 identical with the official `javac`.
+Use `nb-javac` to execute the latest Java language compiler on old
+JDKs!
 
-# Prerequisite
+## Prerequisite
   - Git
   - Ant 1.9.9 or above
   - JDK 17 to build
   - JDK 8 to test
   - Apache Maven to publish to Maven central
 
-# Building nb-javac jar files
+## Building nb-javac jar files
 
 Detailed description of the [build process](BUILD.md) is available in a
 separate [development documentation](BUILD.md). Here are just
@@ -94,7 +95,7 @@ touch netbeans/nbbuild/testuserdir/.lastmodified
 - https://wiki.se.oracle.com/display/JPG/Behavior+without+NB-Javac
 
 # Help
-- Subscribe or mail the users@netbeans.apache.org list - Ask questions, find answers, and also help other users.
+- Email jaroslav.tulach@apidesign.org - the NetBeans founder and maintainer of `nb-javac`.
 - Subscribe or mail the dev@netbeans.apache.org list - Join development discussions, propose new ideas and connect with contributors.
 
 # Contributing

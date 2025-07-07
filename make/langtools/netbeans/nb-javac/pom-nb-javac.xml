@@ -10,7 +10,13 @@
   <packaging>jar</packaging>
 
   <name>nb-javac</name>
-  <description>"nb-javac" is a patched version of OpenJDK "javac", i.e., the Java compiler. This has long been part of NetBeans, providing a highly tuned Java compiler specifically for the Java editor i.e., parsing and lexing for features such as syntax coloring, code completion.</description>
+  <description>
+      `nb-javac` is a "backport" of OpenJDK `javac`, i.e., the Java compiler.
+      It allows to run the latest OpenJDK compiler on older JDKs - as old
+      as JDK8 while being 1:1 identical with the official `javac`.
+      Use `nb-javac` to execute the latest Java language compiler on old
+      JDKs!
+  </description>
   <url>https://github.com/oracle/nb-javac</url>
 
   <licenses>
@@ -29,21 +35,12 @@
 
   <developers>
     <developer>
-      <email>akhilesh.s.singh@oracle.com</email>
-      <name>Akhilesh Singh</name>
-      <url>https://github.com/singh-akhilesh</url>
-      <roles>
-        <role>Developer</role>
-      </roles>
-    </developer>
-    <developer>
-      <email>akshay.ag.gupta@oracle.com</email>
-      <name>Akshay Gupta</name>
-      <url>https://github.com/Akshay-Gupta-Oracle</url>
+      <email>jaroslav.tulach@apidesign.org</email>
+      <name>Jaroslav Tulach</name>
+      <url>https://github.com/jaroslavtulach</url>
       <roles>
         <role>Developer</role>
       </roles>
     </developer>
   </developers>
-
 </project>
