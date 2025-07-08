@@ -166,6 +166,11 @@
             <arg value="${src.dir}/java.compiler/share/classes"/>
             <arg value="${src.dir}/jdk.compiler/share/classes"/>
         </java>
+        <exec failonerror="true" executable="patch" dir="${src.dir}">
+            <arg value="-p1"/>
+            <arg value="-i"/>
+            <arg value="${src.dir}/../temporary-patches/unnamed-workaround"/>
+        </exec>
         <echo file="${src.dir}/jackpot-done">Jackpot done!</echo>
     </target>
 
@@ -214,8 +219,7 @@
                     <arg value="-jar"/>
                     <arg value="${tools.dir}/compiler.jar"/>
                     <arg line="${javac.compilerargs}"/>
-                    <arg value="-g:lines"/>
-                    <arg value="--enable-preview"/>
+                    <arg value="-g"/>
                     <arg value="-encoding"/>
                     <arg value="UTF-8"/>
                     <arg value="-cp"/>
