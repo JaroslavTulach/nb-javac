@@ -22,7 +22,7 @@ the most straigtforward steps to get the final artifacts.
 ### Obtain the code with the following command
 
 ```
-$ git clone https://github.com/oracle/nb-javac.git
+$ git clone https://github.com/jaroslavtulach/nb-javac
 ```
 
 ### Get a specific version use the following command
@@ -92,7 +92,6 @@ touch netbeans/nbbuild/testuserdir/.lastmodified
 
 - https://cwiki.apache.org/confluence/display/NETBEANS/Overview%3A+nb-javac
 - https://cwiki.apache.org/confluence/display/NETBEANS/Release+Schedule
-- https://wiki.se.oracle.com/display/JPG/Behavior+without+NB-Javac
 
 # Help
 - Email jaroslav.tulach@apidesign.org - the NetBeans founder and maintainer of `nb-javac`.

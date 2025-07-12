@@ -17,7 +17,7 @@
       Use `nb-javac` to execute the latest Java language compiler on old
       JDKs!
   </description>
-  <url>https://github.com/oracle/nb-javac</url>
+  <url>https://github.com/jaroslavtulach/nb-javac</url>
 
   <licenses>
       <license>
