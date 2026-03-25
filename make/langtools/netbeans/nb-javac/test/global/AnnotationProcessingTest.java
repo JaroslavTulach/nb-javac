@@ -127,8 +127,8 @@ public class AnnotationProcessingTest extends TestCase {
                     new FileContent("test/Auxiliary.java", auxiliary),
                     new FileContent("test/Aux.java", aux)
                 },
-                "47-47:cannot find symbol\n  symbol:   class Unknown\n  location: class test.Auxiliary",
-                "41-41:cannot find symbol\n  symbol:   class Unknown\n  location: class test.Aux");
+                "47-54:cannot find symbol\n  symbol:   class Unknown\n  location: class test.Auxiliary",
+                "41-48:cannot find symbol\n  symbol:   class Unknown\n  location: class test.Aux");
     }
 
     private void performErrorsTest(String code, int expectedErrors) throws IOException {

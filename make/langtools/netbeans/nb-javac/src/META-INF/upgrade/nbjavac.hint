@@ -115,7 +115,7 @@ $1.isEmpty() :: $1 instanceof java.util.Optional
 //but that does not work in DeferredLintHandler:
 java.util.Optional.of($p1).map($p2).stream()
 =>
-nbjavac.VMWrapper.optional2Stream(java.util.Optional.of($p1).map($p2))
+nbjavac.CollectionWrapper.optional2Stream(java.util.Optional.of($p1).map($p2))
 ;;
 
 java.util.Objects.requireNonNullElse($obj, $def)
@@ -280,6 +280,11 @@ nbjavac.VMWrapper.newDirectoryStream($a1)
 $1.toList() :: $1 instanceof java.util.stream.Stream
 =>
 $1.collect(java.util.stream.Collectors.toList())
+;;
+
+java.util.Arrays.stream($1).map($2).toList()
+=>
+java.util.Arrays.stream($1).map($2).collect(java.util.stream.Collectors.toList())
 ;;
 
 //to eliminate imports:
@@ -458,3 +463,8 @@ $mods$ java.util.LinkedHashSet<$T> fvs = $init$;
 ;;
 
 java.lang.runtime.ExactConversionsSupport => nbjavac.ExactConversionsSupport;;
+
+java.util.Set.copyOf($1)
+=>
+nbjavac.CollectionWrapper.copyOfSet($1)
+;;
