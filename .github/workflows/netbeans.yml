@@ -1,7 +1,10 @@
 name: NetBeans
-on: [push]
-#  push:
-#    branches: [ master ]
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
 jobs:
   linux:
     name: "NetBeans on nb-javac"
