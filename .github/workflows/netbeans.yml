@@ -37,7 +37,7 @@ jobs:
         run: |
             git clone https://github.com/apache/netbeans
             cd netbeans
-            git checkout master
+            git checkout 30-rc2
       - name: Build NetBeans with latest nb-javac
         run: JAVA_HOME=`cat jdk21` ant -f netbeans build -Dnbjavac.class.path=`pwd`/make/langtools/netbeans/nb-javac/dist/nb-javac-*.jar
       - name: Setup Xvfb
