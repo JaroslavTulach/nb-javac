@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 public class VMWrapper {
@@ -192,6 +193,14 @@ public class VMWrapper {
 
     public static <T> Stream<T> optional2Stream(Optional<T> opt) {
         return opt.isPresent()? Stream.of(opt.get()) : Stream.empty();
+    }
+
+    public static <T> void optionalIfPresentOrElse(Optional<T> opt, Consumer<T> consumer, Runnable empty) {
+        if (opt.isPresent()) {
+            consumer.accept(opt.get());
+        } else {
+            empty.run();
+        }
     }
 
     public static <K, V> Map<K, V> toMap(K k1, V v1, K k2, V v2) {
