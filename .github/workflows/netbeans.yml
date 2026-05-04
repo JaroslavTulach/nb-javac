@@ -12,8 +12,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 7d33005615b3c744564f3d38ab9ef14bf8c3ec44 (tag: 18-rc4, tag: 18, origin/release180, apache/release180
-        tag: [ '7d33005615b3c744564f3d38ab9ef14bf8c3ec44' ]
+        # git merge-base 18 0a84604d51 => bf19d75c7df884092123d2d6bfe61eef7fc4cd73
+        # git merge-base 19 0a84604d51 => 0a84604d51f9e8b560c060b8e26cdb3ee3141804
+        # e.g. 0a84604d51 is a commit somewhere between NetBeans 18 and 19
+        tag: [ '0a84604d51' ]
         os: [ ubuntu-24.04 ]
 
     steps:
