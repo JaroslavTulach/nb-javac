@@ -6,9 +6,16 @@ on:
   workflow_dispatch:
 
 jobs:
-  linux:
+  build:
     name: "NetBeans on nb-javac"
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # 7d33005615b3c744564f3d38ab9ef14bf8c3ec44 (tag: 18-rc4, tag: 18, origin/release180, apache/release180
+        tag: [ '7d33005615b3c744564f3d38ab9ef14bf8c3ec44' ]
+        os: [ ubuntu-22.04 ]
+
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 8
@@ -40,7 +47,7 @@ jobs:
         run: |
             git clone https://github.com/apache/netbeans
             cd netbeans
-            git checkout 0a84604d51f9e8b560c060b8e26cdb3ee3141804
+            git checkout ${{ matrix.tag }}
       - name: Build NetBeans with latest nb-javac
         run: JAVA_HOME=`cat jdk11` ant -f netbeans build -Dnbjavac.class.path=`pwd`/make/langtools/netbeans/nb-javac/dist/nb-javac-*.jar
       - name: Setup Xvfb
