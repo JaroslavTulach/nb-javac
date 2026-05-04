@@ -224,7 +224,7 @@ public class VMWrapper {
     }
 
     public static <K, V> Map<K, V> toMap(K k1, V v1, K k2, V v2) {
-        return Collections.unmodifiableMap(new HashMap<>() {{
+        return Collections.unmodifiableMap(new HashMap<K, V>() {{
             put(k1, v1);
             put(k2, v2);
         }});
