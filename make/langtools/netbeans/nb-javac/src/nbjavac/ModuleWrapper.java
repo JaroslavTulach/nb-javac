@@ -32,7 +32,13 @@ import java.util.function.BiFunction;
 public abstract class ModuleWrapper {
     private static final BiFunction<Class<?>, ClassLoader, ModuleWrapper> FACTORY;
     static {
-        FACTORY = ModuleWrapperFallback.factory();
+        BiFunction<Class<?>, ClassLoader, ModuleWrapper> f;
+        try {
+            f = ModuleWrapperDirect.factory();
+        } catch (ClassNotFoundException ex) {
+            f = ModuleWrapperFallback.factory();
+        }
+        FACTORY = f;
     }
 
     public static ModuleWrapper getModule(Class<?> clazz) {
