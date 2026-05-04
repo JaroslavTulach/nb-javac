@@ -14,7 +14,7 @@ jobs:
       matrix:
         # 7d33005615b3c744564f3d38ab9ef14bf8c3ec44 (tag: 18-rc4, tag: 18, origin/release180, apache/release180
         tag: [ '7d33005615b3c744564f3d38ab9ef14bf8c3ec44' ]
-        os: [ ubuntu-22.04 ]
+        os: [ ubuntu-24.04 ]
 
     steps:
       - uses: actions/checkout@v2
