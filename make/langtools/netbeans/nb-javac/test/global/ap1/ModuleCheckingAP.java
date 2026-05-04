@@ -26,27 +26,20 @@
 package global.ap1;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.Writer;
 import java.lang.reflect.Method;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ModuleElement;
 import javax.lang.model.element.QualifiedNameable;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
-import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 import nbjavac.ModuleWrapper;
-import org.junit.Assert;
-import static org.junit.Assert.assertEquals;
 
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 @SupportedAnnotationTypes("*")
@@ -69,7 +62,7 @@ public final class ModuleCheckingAP extends AbstractProcessor {
         String moduleName;
         try {
             moduleName = moduleFor(clazz);
-            Assert.assertNotNull("Module for " + clazz + " found", moduleName);
+            assertNotNull("Module for " + clazz + " found", moduleName);
             // use real module names on JDK9+
             e1 = moduleElementFor(clazz);
             e2 = moduleElementViaWrapperFor(clazz);
@@ -115,5 +108,24 @@ public final class ModuleCheckingAP extends AbstractProcessor {
         Method getModuleElement = eu.getClass().getMethod("getModuleElement", CharSequence.class);
         QualifiedNameable element = (QualifiedNameable) getModuleElement.invoke(eu, module.getName());
         return element;
+    }
+
+    private static void assertEquals(String msg, Object expected, Object actual) {
+        if (expected == null) {
+            if (actual == null) {
+                return;
+            }
+        } else {
+            if (expected.equals(actual)) {
+                return;
+            }
+        }
+        throw new AssertionError(msg + " expecting: " + expected + " but got: " + actual);
+    }
+
+    private void assertNotNull(String msg, Object value) {
+        if (value == null) {
+            throw new AssertionError(msg);
+        }
     }
 }
