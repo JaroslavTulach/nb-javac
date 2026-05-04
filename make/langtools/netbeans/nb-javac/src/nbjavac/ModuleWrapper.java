@@ -35,7 +35,7 @@ public abstract class ModuleWrapper {
         BiFunction<Class<?>, ClassLoader, ModuleWrapper> f;
         try {
             f = ModuleWrapperDirect.factory();
-        } catch (ClassNotFoundException ex) {
+        } catch (ReflectiveOperationException ex) {
             f = ModuleWrapperFallback.factory();
         }
         FACTORY = f;

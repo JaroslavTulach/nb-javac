@@ -24,48 +24,86 @@
  */
 package nbjavac;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Objects;
 import java.util.function.BiFunction;
 
 final class ModuleWrapperDirect extends ModuleWrapper {
-    /** instance of java.lang.Module */
-    private final Module module;
+    // methods for reflective access to JDK9+ API
+    private static Method getModuleForClass;
+    private static Method getUnnamedModuleForLoader;
+    private static Method getNameForModule;
+    private static Method isNamedForModule;
+    private static Method addUsesForModule;
+    private static Method addExportsForModule;
 
-    private ModuleWrapperDirect(Module module) {
+    /** instance of java.lang.Module */
+    private final Object module;
+
+    private ModuleWrapperDirect(Object module) {
         this.module = module;
     }
 
 
-    static BiFunction<Class<?>, ClassLoader, ModuleWrapper> factory() throws ClassNotFoundException {
+    static BiFunction<Class<?>, ClassLoader, ModuleWrapper> factory() throws ReflectiveOperationException {
         Class<?> moduleClass = Class.forName("java.lang.Module");
         Objects.requireNonNull(moduleClass);
+        getModuleForClass = Class.class.getMethod("getModule");
+        getUnnamedModuleForLoader = ClassLoader.class.getMethod("getUnnamedModule");
+        getNameForModule = moduleClass.getMethod("getName");
+        isNamedForModule = moduleClass.getMethod("isNamed");
+        addUsesForModule = moduleClass.getMethod("addUses", Class.class);
+        addExportsForModule = moduleClass.getMethod("addExports", String.class, moduleClass);
         return (clazz, loader) -> {
-            if (clazz != null) {
-                return new ModuleWrapperDirect(clazz.getModule());
-            } else {
-                return new ModuleWrapperDirect(loader.getUnnamedModule());
+            try {
+                Object module;
+                if (clazz != null) {
+                    module = getModuleForClass.invoke(clazz);
+                } else {
+                    module = getUnnamedModuleForLoader.invoke(loader);
+                }
+                return new ModuleWrapperDirect(module);
+            } catch (ReflectiveOperationException ex) {
+                throw new IllegalStateException(ex);
             }
         };
     }
 
     @Override
     public String getName() {
-        return module.getName();
+        try {
+            return (String) getNameForModule.invoke(module);
+        } catch (IllegalAccessException | InvocationTargetException ex) {
+            throw new IllegalStateException(ex);
+        }
     }
 
     @Override
     public boolean isNamed() {
-        return module.isNamed();
+        try {
+            return (Boolean) isNamedForModule.invoke(module);
+        } catch (IllegalAccessException | InvocationTargetException ex) {
+            throw new IllegalStateException(ex);
+        }
     }
 
     @Override
     public void addExports(String pack, ModuleWrapper to) {
-        Module toModule = ((ModuleWrapperDirect)to).module;
-        module.addExports(pack, toModule);
+        Object toModule = ((ModuleWrapperDirect)to).module;
+        try {
+            addExportsForModule.invoke(module, pack, toModule);
+        } catch (IllegalAccessException | InvocationTargetException ex) {
+            throw new IllegalStateException(ex);
+        }
     }
 
     @Override
     public <S> void addUses(Class<S> service) {
-        module.addUses(service);
+        try {
+            addUsesForModule.invoke(module, service);
+        } catch (IllegalAccessException | InvocationTargetException ex) {
+            throw new IllegalStateException(ex);
+        }
     }
 }
