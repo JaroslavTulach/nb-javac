@@ -31,9 +31,13 @@ import com.sun.tools.javac.api.JavacTaskImpl;
 import global.ap1.AP;
 import global.ap1.ClassBasedAP;
 import global.ap1.ErrorProducingAP;
+import global.ap1.ModuleCheckingAP;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Reader;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
@@ -232,6 +236,33 @@ public class AnnotationProcessingTest extends TestCase {
 
         assertTrue(new File(sourceOutput, "java.lang.String.txt").canRead());
         
+        //intentionally not deleting thwn the test fails to simply diagnostic
+        delete(sourceOutput);
+    }
+    
+    public void testModuleElementNamesMatcheModuleNames() throws IOException {
+        File sourceOutput = File.createTempFile("ModuleNames", "");
+        
+        sourceOutput.delete();
+        assertTrue(sourceOutput.mkdirs());
+
+        final String version = System.getProperty("java.vm.specification.version"); //NOI18N
+        URL myself = AnnotationProcessingTest.class.getProtectionDomain().getCodeSource().getLocation();
+        
+        Main.compile(Utils.asParameters(
+            "-source", version,
+            "-target", version,
+            "-classpath", myself.toExternalForm(),
+            "-processor", ModuleCheckingAP.class.getName(),
+            "-s", sourceOutput.getAbsolutePath(),
+            "java.lang.String"
+        ).toArray(new String[0]));
+        
+        final File file = new File(sourceOutput, "ModuleNames.txt");
+        assertTrue(file.canRead());
+        try (BufferedReader r = new BufferedReader(new FileReader(file))) {
+            assertEquals("Generated file " + file + " contains", "java.lang.SuppressWarnings", r.readLine());
+        }
         //intentionally not deleting thwn the test fails to simply diagnostic
         delete(sourceOutput);
     }
