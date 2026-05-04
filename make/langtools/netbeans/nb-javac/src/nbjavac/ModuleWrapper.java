@@ -24,64 +24,35 @@
  */
 package nbjavac;
 
-import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Set;
+import java.util.function.BiFunction;
 
-public class ModuleWrapper {
-    private final Class<?> clazz;
-
-    private ModuleWrapper(Class<?> c) {
-        this.clazz = c;
+public abstract class ModuleWrapper {
+    private static final BiFunction<Class<?>, ClassLoader, ModuleWrapper> FACTORY;
+    static {
+        FACTORY = ModuleWrapperFallback.factory();
     }
 
     public static ModuleWrapper getModule(Class<?> clazz) {
-        return new ModuleWrapper(clazz);
+        return FACTORY.apply(clazz, null);
     }
 
     public static ModuleWrapper getUnnamedModule(ClassLoader loader) {
-        return new ModuleWrapper(null);
+        return FACTORY.apply(null, loader);
     }
 
-    public String getName() {
-        switch (clazz.getName()) {
-            case "jdk.javadoc.internal.api.JavadocTool": return "jdk.javadoc";
-            case "com.sun.tools.javac.api.JavacTool": return "jdk.compiler";
-            default: return "jdk.compiler"; //XXX
-        }
-    }
+    public abstract String getName();
+    public abstract boolean isNamed();
+    public abstract void addExports(String pack, ModuleWrapper to);
+    public abstract <S> void addUses(Class<S> service);
 
-    public boolean isNamed() {
-        return false;
-    }
-
-    public void addExports(String pack, ModuleWrapper to) {
-    }
-
-    public <S> void addUses(Class<S> service) {
-        if (this.clazz != null) {
-            ensureUses(this.clazz, service);
-        }
-        ensureUses(service);
-    }
 
     static void ensureUses(Class<?> clazz) {
         // ServiceLoaderWrapper.class.getModule().addUses(aClass);
         Class<?> thisClass = ServiceLoaderWrapper.class;
-        ensureUses(thisClass, clazz);
-    }
-
-    private static void ensureUses(Class<?> thisClass, Class<?> clazz) {
-        try {
-            final Class<?> Module = Class.forName("java.lang.Module");
-            final Method addUses = Module.getDeclaredMethod("addUses", Class.class);
-            final Method getModule = Class.class.getDeclaredMethod("getModule");
-            final Object thisClassModule = getModule.invoke(thisClass);
-            addUses.invoke(thisClassModule, clazz);
-        } catch (SecurityException | ReflectiveOperationException t) {
-            //ignore - might log?
-        }
+        ModuleWrapperFallback.ensureUses(thisClass, clazz);
     }
 
     public static class ModuleFinder {

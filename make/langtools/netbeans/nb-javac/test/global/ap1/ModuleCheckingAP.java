@@ -44,9 +44,14 @@ import nbjavac.ModuleWrapper;
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 @SupportedAnnotationTypes("*")
 public final class ModuleCheckingAP extends AbstractProcessor {
+    private boolean processed;
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+        if (this.processed) {
+            return false;
+        }
+        this.processed = true;
         try (
             Writer w = processingEnv.getFiler().createResource(StandardLocation.SOURCE_OUTPUT, "", "ModuleNames.txt").openWriter();
         ) {
@@ -80,7 +85,7 @@ public final class ModuleCheckingAP extends AbstractProcessor {
         // write the output
         w.append(clazz.getName() + "\n");
     }
-    
+
     private static String moduleFor(Class<?> clazz) throws NoSuchMethodException {
         try {
             Method getModule = Class.class.getMethod("getModule");
@@ -101,7 +106,7 @@ public final class ModuleCheckingAP extends AbstractProcessor {
         QualifiedNameable module = (QualifiedNameable) getModuleOf.invoke(eu, element);
         return module;
     }
-    
+
     private QualifiedNameable moduleElementViaWrapperFor(Class<?> clazz) throws ReflectiveOperationException {
         final Elements eu = processingEnv.getElementUtils();
         ModuleWrapper module = ModuleWrapper.getModule(clazz);
