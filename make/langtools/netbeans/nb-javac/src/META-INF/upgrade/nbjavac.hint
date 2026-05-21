@@ -467,6 +467,23 @@ $mods$ $type<$T> fvs = $init$; :: inClass("com.sun.tools.javac.comp.CaptureScann
 $mods$ java.util.LinkedHashSet<$T> fvs = $init$;
 ;;
 
+java.util.SequencedMap => java.util.Map;;
+
+java.util.Collections.unmodifiableSequencedMap($map)
+=>
+java.util.Collections.unmodifiableMap($map)
+;;
+
+$list.getFirst() :: $list instanceof java.util.List
+=>
+$list.get(0)
+;;
+
+$map.sequencedKeySet() :: $map instanceof java.util.SequencedMap
+=>
+new java.util.LinkedHashSet<>($map.keySet());
+;;
+
 java.lang.runtime.ExactConversionsSupport => nbjavac.ExactConversionsSupport;;
 
 java.util.Set.copyOf($1)
