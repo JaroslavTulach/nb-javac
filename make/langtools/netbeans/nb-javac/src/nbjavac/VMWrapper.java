@@ -30,6 +30,7 @@ import java.lang.ref.SoftReference;
 import java.net.JarURLConnection;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileStore;
 import java.nio.file.FileSystem;
@@ -75,8 +76,7 @@ public class VMWrapper {
                 loader = ClassLoader.getSystemClassLoader();
             }
             Enumeration<URL> en = loader.getResources("META-INF/services/com.sun.tools.javac.platform.PlatformProvider");
-            URL res = en.hasMoreElements() ? en.nextElement() : null;
-            if (res == null) {
+            if (!en.hasMoreElements()) {
                 //runnning inside a JDK image, try to look for lib/ct.sym:
                 String javaHome = System.getProperty("java.home");
                 Path file = Paths.get(javaHome);
@@ -88,10 +88,7 @@ public class VMWrapper {
                 }
                 return FileSystems.newFileSystem(file, (ClassLoader)null).getRootDirectories().iterator().next();
             }
-            if (!res.getProtocol().equals("jar")) {
-                res = en.hasMoreElements() ? en.nextElement() : null;
-            }
-            URL jar = ((JarURLConnection)res.openConnection()).getJarFileURL();
+            URL jar = getJarUrl(en);
             Path path = Paths.get(jar.toURI());
             FileSystem fs = FileSystems.newFileSystem(path, (ClassLoader) null);
             Path ctSym = fs.getPath("META-INF", "ct.sym");
@@ -100,6 +97,38 @@ public class VMWrapper {
         } catch (IOException | URISyntaxException ex) {
             throw new IllegalStateException(ex);
         }
+    }
+
+    private static URL getJarUrl(Enumeration<URL> resources) throws IOException {
+        while (resources.hasMoreElements()) {
+            URL res = resources.nextElement();
+            if ("jar".equals(res.getProtocol())) {
+                return ((JarURLConnection)res.openConnection()).getJarFileURL();
+            } else if (res.getProtocol().equals("bundleresource")) {
+                // running inside Eclipse,
+                URLConnection conn = res.openConnection();
+                if (!"BundleURLConnection".equals(conn.getClass().getSimpleName())){
+                    continue;
+                }
+                // use reflection to call `public URL getLocalURL()` if it exists,
+                // as it converts the URL to a common local URL protocol (i.e file: or jar: protocol)
+                try {
+                    URL localUrl = (URL) conn.getClass().getMethod("getLocalURL").invoke(conn);
+                    if (localUrl == null) {
+                        continue;
+                    }
+                    if ("file".equals(localUrl.getProtocol())) {
+                        return localUrl;
+                    }
+                    if ("jar".equals(localUrl.getProtocol())) {
+                        return ((JarURLConnection) localUrl.openConnection()).getJarFileURL();
+                    }
+                } catch (ReflectiveOperationException ex) {
+                    // ignore and continue
+                }
+            }
+        }
+        throw new IllegalStateException("Cannot find jar URL for ct.sym");
     }
 
     public static DirectoryStream<Path> newDirectoryStream(Path dir) throws IOException {
@@ -204,7 +233,7 @@ public class VMWrapper {
     }
 
     public static <K, V> Map<K, V> toMap(K k1, V v1, K k2, V v2) {
-        return Collections.unmodifiableMap(new HashMap<>() {{
+        return Collections.unmodifiableMap(new HashMap<K, V>() {{
             put(k1, v1);
             put(k2, v2);
         }});

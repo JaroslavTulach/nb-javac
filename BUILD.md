@@ -1,42 +1,54 @@
 # Hacking Guide for the automatically generated [nbjavac](README.md)
 
-The idea of the new build system is to take the JDK 16+ `javac` sources and
-automatically convert them to run on JDK 8+. As a result the sources come 
-from real JDK repository. The `nbjavac` repository doesn't contain them. 
+The idea of the `nb-javac` build system is to take the JDK `javac` sources
+from its **official repository** and
+**automatically convert** them to run on _older JDKs_ (as old as JDK 8 right now).
+As a result:
+- the sources come from real JDK repository.
+- this `nbjavac` repository doesn't contain sources.
+
 This repository only contains the build scripts and
 description of [advanced refactorings](https://netbeans.apache.org/jackpot/HintsFileFormat.html).
-Use:
+Bugfixes, features and other changes to `javac` sources are supposed to be done
+in the `jdk` subdirectory and integrated into the JDK's `javac` **official repository**.
 
 ```bash
-$ JAVA_HOME=/jdk-17/ ant -f ./make/langtools/netbeans/nb-javac jar
+$ JAVA_HOME=/jdk-25/ ant -f ./make/langtools/netbeans/nb-javac jar
 ```
 
-to build everything at once. Read below to control individual steps of the build.
+Use the above command to build everything at once. Read below to control individual steps of the build.
 
 
 ### Getting the JDK repository
 
-The build requires JDK repository in `jdk` subdirectory of the root of `nb-javac` repository.
-If such directory doesn't exist, the build checks out one:
+The build requires JDK repository in `jdk` subdirectory of the root of this `nb-javac` repository.
+If such directory doesn't exist, the build checks one out. That's done by the
+_initialization step_:
 
 ```bash
-$ JAVA_HOME=/jdk-17/ ant -f ./make/langtools/netbeans/nb-javac init \
+$ JAVA_HOME=/jdk-25/ ant -f ./make/langtools/netbeans/nb-javac init
+```
+
+The _initialization step_ needs to know the _exact commit_ to checkout. Also
+it needs to know the OpenJDK like repository to check the sources from.
+Default values of these `jdk.git.url` and `jdk.git.commit` properties
+are provided in a dedicated
+[./make/langtools/netbeans/nb-javac/nbproject/project.properties](https://github.com/JaroslavTulach/nb-javac/blob/master/make/langtools/netbeans/nb-javac/nbproject/project.properties)
+file. Those default values can be optionally overriden from a command line:
+
+```bash
+$ JAVA_HOME=/jdk-25/ ant -f ./make/langtools/netbeans/nb-javac init \
     -Djdk.git.url=https://github.com/openjdk/jdk17 \
     -Djdk.git.commit=jdk-17+35
 ```
 
-If the `jdk` directory is present the build leaves its content untouched. E.g.
+If the `jdk` directory is present the build _leaves its content untouched_. E.g.
 a developer may clone the `jdk` repository manually, switch its content to any other tag,
 make changes in the `jdk/src/java.compiler/` or `jdk/src/jdk.compiler/` directories,
-etc. Bugfixes, features and other changes to `javac` sources are supposed to be done 
-in the `jdk` subdirectory and integrated into the JDK's `javac` official repository.
+etc.
 
 One can discard any changes by `rm -rf jdk`. Then the subsequent build checks
-a fresh copy of the `jdk` repository from scratch. The default values for
-`jdk.git.url` and `jdk.git.commit` properties are in the
-`./make/langtools/netbeans/nb-javac/nbproject/project.properties`
-file.
-
+a fresh copy of the `jdk` repository from scratch.
 
 ### Automatically processing the sources
 
@@ -46,7 +58,7 @@ to them. This is done by executing the [jackpot](https://netbeans.apache.org/jac
 target:
 
 ```bash
-$ JAVA_HOME=/jdk-17/ ant -f ./make/langtools/netbeans/nb-javac jackpot
+$ JAVA_HOME=/jdk-25/ ant -f ./make/langtools/netbeans/nb-javac jackpot
 ```
 
 This step copies the `javac` sources from the `jdk` subdirectory into a sibling
@@ -60,7 +72,7 @@ be edited manually. Rather than that edit the sources in the original
 the refactorings again execute:
 
 ```bash
-$ JAVA_HOME=/jdk-17/ ant -f ./make/langtools/netbeans/nb-javac clean jackpot
+$ JAVA_HOME=/jdk-25/ ant -f ./make/langtools/netbeans/nb-javac clean jackpot
 ```
 
 ### The build
@@ -69,13 +81,13 @@ As described in [general documentation](README.md) use the following command to
 generate the final JAR files:
 
 ```bash
-$ JAVA_HOME=/jdk-17/ ant -f ./make/langtools/netbeans/nb-javac clean jar
+$ JAVA_HOME=/jdk-25/ ant -f ./make/langtools/netbeans/nb-javac clean jar
 ```
 
 JARs `nb-javac-*-api.jar` and `nb-javac-*-impl.jar` are going to appear
 at location `./make/langtools/netbeans/nb-javac/dist/`.
 
-### Debug & Develop 
+### Debug & Develop
 
 Open the `nb-javac` project in NetBeans IDE with
 
