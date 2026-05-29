@@ -120,7 +120,7 @@ nbjavac.VMWrapper.optionalIfPresentOrElse(java.util.Optional.of($p1).map($p2), $
 //but that does not work in DeferredLintHandler:
 java.util.Optional.of($p1).map($p2).stream()
 =>
-nbjavac.CollectionWrapper.optional2Stream(java.util.Optional.of($p1).map($p2))
+nbjavac.CollectionsWrapper.optional2Stream(java.util.Optional.of($p1).map($p2))
 ;;
 
 java.util.Objects.requireNonNullElse($obj, $def)
@@ -488,5 +488,5 @@ java.lang.runtime.ExactConversionsSupport => nbjavac.ExactConversionsSupport;;
 
 java.util.Set.copyOf($1)
 =>
-nbjavac.CollectionWrapper.copyOfSet($1)
+nbjavac.CollectionsWrapper.copyOfSet($1)
 ;;

@@ -29,8 +29,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-public class CollectionWrapper {
-    private CollectionWrapper() {
+public class CollectionsWrapper {
+    private CollectionsWrapper() {
     }
 
     public static <T> Set<T> copyOfSet(Collection<? extends T> source) {
