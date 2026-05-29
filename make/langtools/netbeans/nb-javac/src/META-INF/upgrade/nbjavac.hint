@@ -106,6 +106,11 @@ $1.isEmpty() :: $1 instanceof java.util.Optional
 !$1.isPresent()
 ;;
 
+java.util.Optional.of($p1).map($p2).ifPresentOrElse($2, $3)
+=>
+nbjavac.VMWrapper.optionalIfPresentOrElse(java.util.Optional.of($p1).map($p2), $2, $3)
+;;
+
 // XXX: reported as https://github.com/apache/netbeans-jackpot30/issues/38
 //should be:
 //$1.stream() :: $1 instanceof java.util.Optional
@@ -115,7 +120,7 @@ $1.isEmpty() :: $1 instanceof java.util.Optional
 //but that does not work in DeferredLintHandler:
 java.util.Optional.of($p1).map($p2).stream()
 =>
-nbjavac.VMWrapper.optional2Stream(java.util.Optional.of($p1).map($p2))
+nbjavac.CollectionsWrapper.optional2Stream(java.util.Optional.of($p1).map($p2))
 ;;
 
 java.util.Objects.requireNonNullElse($obj, $def)
@@ -280,6 +285,11 @@ nbjavac.VMWrapper.newDirectoryStream($a1)
 $1.toList() :: $1 instanceof java.util.stream.Stream
 =>
 $1.collect(java.util.stream.Collectors.toList())
+;;
+
+java.util.Arrays.stream($1).map($2).toList()
+=>
+java.util.Arrays.stream($1).map($2).collect(java.util.stream.Collectors.toList())
 ;;
 
 //to eliminate imports:
@@ -457,4 +467,26 @@ $mods$ $type<$T> fvs = $init$; :: inClass("com.sun.tools.javac.comp.CaptureScann
 $mods$ java.util.LinkedHashSet<$T> fvs = $init$;
 ;;
 
+java.util.SequencedMap => java.util.Map;;
+
+java.util.Collections.unmodifiableSequencedMap($map)
+=>
+java.util.Collections.unmodifiableMap($map)
+;;
+
+$list.getFirst() :: $list instanceof java.util.List
+=>
+$list.get(0)
+;;
+
+$map.sequencedKeySet() :: $map instanceof java.util.SequencedMap
+=>
+new java.util.LinkedHashSet<>($map.keySet());
+;;
+
 java.lang.runtime.ExactConversionsSupport => nbjavac.ExactConversionsSupport;;
+
+java.util.Set.copyOf($1)
+=>
+nbjavac.CollectionsWrapper.copyOfSet($1)
+;;
