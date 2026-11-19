@@ -54,6 +54,7 @@
     <skipTests>false</skipTests>
     <!-- artifacts are published by the Ant targets from the profiles below -->
     <maven.deploy.skip>true</maven.deploy.skip>
+    <nbjavac.tools.dir>${project.basedir}/lib</nbjavac.tools.dir>
     <nbjavac.ant.dir>${project.basedir}/make/langtools/netbeans/nb-javac</nbjavac.ant.dir>
   </properties>
 
@@ -70,6 +71,64 @@
     <sourceDirectory>${project.basedir}/make/langtools/netbeans/nb-javac/src</sourceDirectory>
     <testSourceDirectory>${project.basedir}/make/langtools/netbeans/nb-javac/test</testSourceDirectory>
     <plugins>
+      <plugin>
+        <!-- tools used by the Ant build; they are copied to its tools.dir -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>3.8.1</version>
+        <configuration>
+          <outputDirectory>${nbjavac.tools.dir}</outputDirectory>
+          <artifactItems>
+            <artifactItem>
+              <groupId>org.apache.netbeans.modules.jackpot30</groupId>
+              <artifactId>tool</artifactId>
+              <version>28.0</version>
+              <destFileName>jackpot.jar</destFileName>
+            </artifactItem>
+            <artifactItem>
+              <groupId>org.frgaal</groupId>
+              <artifactId>compiler</artifactId>
+              <version>24.0.0</version>
+              <destFileName>compiler.jar</destFileName>
+            </artifactItem>
+            <artifactItem>
+              <groupId>com.dukescript.nbjavac</groupId>
+              <artifactId>nb-javac</artifactId>
+              <version>jdk-21u</version>
+              <destFileName>nb-javac-jdk-21u.jar</destFileName>
+            </artifactItem>
+            <artifactItem>
+              <groupId>junit</groupId>
+              <artifactId>junit</artifactId>
+              <version>4.12</version>
+              <destFileName>junit-4.12.jar</destFileName>
+            </artifactItem>
+            <artifactItem>
+              <groupId>org.hamcrest</groupId>
+              <artifactId>hamcrest-core</artifactId>
+              <version>1.3</version>
+              <destFileName>hamcrest-core-1.3.jar</destFileName>
+            </artifactItem>
+          </artifactItems>
+        </configuration>
+        <executions>
+          <!-- the Ant "clean" target needs the tools as well -->
+          <execution>
+            <id>download-tools-for-clean</id>
+            <phase>pre-clean</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>download-tools</id>
+            <phase>initialize</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <!-- Declares the remaining main source roots for IDEs; compilation itself is done by the Ant build -->
         <groupId>org.codehaus.mojo</groupId>

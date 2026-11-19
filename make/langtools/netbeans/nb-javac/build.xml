@@ -105,11 +105,19 @@
         <fail unless="jdk.git.commit" message="Property jdk.git.commit is not defined. Build with Maven (mvn) or specify -Djdk.git.commit=..."/>
         <mkdir dir="build/lib"/>
         <mkdir dir="${tools.dir}"/>
-        <get dest="${tools.dir}/jackpot.jar" skipexisting="true" src="https://repo1.maven.org/maven2/org/apache/netbeans/modules/jackpot30/tool/28.0/tool-28.0.jar"/>
-        <get dest="${tools.dir}/compiler.jar" skipexisting="true" src="https://repo1.maven.org/maven2/org/frgaal/compiler/24.0.0/compiler-24.0.0.jar"></get>
-        <get dest="${tools.dir}/nb-javac-jdk-21u.jar" skipexisting="true" src="https://repo1.maven.org/maven2/com/dukescript/nbjavac/nb-javac/jdk-21u/nb-javac-jdk-21u.jar"></get>
-        <get dest="${tools.dir}/junit-4.12.jar" skipexisting="true" src="https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar"></get>
-        <get dest="${tools.dir}/hamcrest-core-1.3.jar" skipexisting="true" src="https://repo1.maven.org/maven2/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar"></get>
+        <fail message="Build tools are missing in ${tools.dir}. They are downloaded by Maven, run 'mvn initialize'.">
+            <condition>
+                <not>
+                    <and>
+                        <available file="${tools.dir}/jackpot.jar"/>
+                        <available file="${tools.dir}/compiler.jar"/>
+                        <available file="${tools.dir}/nb-javac-jdk-21u.jar"/>
+                        <available file="${tools.dir}/junit-4.12.jar"/>
+                        <available file="${tools.dir}/hamcrest-core-1.3.jar"/>
+                    </and>
+                </not>
+            </condition>
+        </fail>
     </target>
 
     <target name="-post-init" depends="-checkout-jdk">
