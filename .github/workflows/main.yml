@@ -26,10 +26,10 @@ jobs:
       - name: Record JDK25
         run: echo "$JAVA_HOME" | tee jdk25
       - name: Build on JDK25
-        run: ant -f make/langtools/netbeans/nb-javac jar
+        run: mvn -B package -DskipTests
       - name: Test on JDK8
-        run: JAVA_HOME=`cat jdk8` ant -f make/langtools/netbeans/nb-javac test
+        run: JAVA_HOME=`cat jdk8` mvn -B test
       - name: Test on JDK25
-        run: ant -f make/langtools/netbeans/nb-javac test
+        run: mvn -B test
       - name: Build patched JDK25
         run: ./build-jdk.sh

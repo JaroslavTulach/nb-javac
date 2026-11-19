@@ -13,14 +13,22 @@ Bugfixes, features and other changes to `javac` sources are supposed to be done
 in the `jdk` subdirectory and integrated into the JDK's `javac` **official repository**.
 
 ```bash
-$ JAVA_HOME=/jdk-25/ ant -f ./make/langtools/netbeans/nb-javac jar
+$ JAVA_HOME=/jdk-25/ mvn package -DskipTests
 ```
 
-Alternatively run `mvn package` in the root directory. The [pom.xml](pom.xml) just
-delegates to the same `ant` build (via `maven-antrun-plugin`); the resulting jars
-appear in `make/langtools/netbeans/nb-javac/dist`.
+Use the above command to build everything at once. The build is driven by
+the standard Maven lifecycle phases:
 
-Use the above command to build everything at once. Read below to control individual steps of the build.
+| Phase | What it does |
+| ----- | ------------ |
+| `initialize` | checks the OpenJDK sources out into `jdk` (see below) |
+| `generate-sources` | applies the automatic refactorings to the sources (see below) |
+| `compile` | compiles the sources |
+| `test` | runs the tests (skip with `-DskipTests`) |
+| `package` | creates the `api` and `impl` jars and the sources zip |
+| `deploy` | publishes the artifacts (see the profiles in [pom.xml](pom.xml) and the [README](README.md)) |
+
+Any `-Dkey=value` given to `mvn` is passed to the build. Read below to control individual steps of the build.
 
 
 ### Getting the JDK repository
@@ -30,7 +38,7 @@ If such directory doesn't exist, the build checks one out. That's done by the
 _initialization step_:
 
 ```bash
-$ JAVA_HOME=/jdk-25/ ant -f ./make/langtools/netbeans/nb-javac init
+$ JAVA_HOME=/jdk-25/ mvn initialize
 ```
 
 The _initialization step_ needs to know the _exact commit_ to checkout. Also
@@ -41,7 +49,7 @@ are provided in a dedicated
 file. Those default values can be optionally overriden from a command line:
 
 ```bash
-$ JAVA_HOME=/jdk-25/ ant -f ./make/langtools/netbeans/nb-javac init \
+$ JAVA_HOME=/jdk-25/ mvn initialize \
     -Djdk.git.url=https://github.com/openjdk/jdk17 \
     -Djdk.git.commit=jdk-17+35
 ```
@@ -59,10 +67,10 @@ a fresh copy of the `jdk` repository from scratch.
 Once the JDK's `javac` sources are in the `jdk` subdirectory, it is necessary
 to apply [advanced refactorings](./make/langtools/netbeans/nb-javac/src/META-INF/upgrade/nbjavac.hint)
 to them. This is done by executing the [jackpot](https://netbeans.apache.org/jackpot/HintsFileFormat.html)
-target:
+phase:
 
 ```bash
-$ JAVA_HOME=/jdk-25/ ant -f ./make/langtools/netbeans/nb-javac jackpot
+$ JAVA_HOME=/jdk-25/ mvn generate-sources
 ```
 
 This step copies the `javac` sources from the `jdk` subdirectory into a sibling
@@ -76,7 +84,7 @@ be edited manually. Rather than that edit the sources in the original
 the refactorings again execute:
 
 ```bash
-$ JAVA_HOME=/jdk-25/ ant -f ./make/langtools/netbeans/nb-javac clean jackpot
+$ JAVA_HOME=/jdk-25/ mvn clean generate-sources
 ```
 
 ### The build
@@ -85,7 +93,7 @@ As described in [general documentation](README.md) use the following command to
 generate the final JAR files:
 
 ```bash
-$ JAVA_HOME=/jdk-25/ ant -f ./make/langtools/netbeans/nb-javac clean jar
+$ JAVA_HOME=/jdk-25/ mvn clean package -DskipTests
 ```
 
 JARs `nb-javac-*-api.jar` and `nb-javac-*-impl.jar` are going to appear
@@ -102,7 +110,7 @@ $ netbeans --open make/langtools/netbeans/nb-javac/
 and you should be able to debug a test (for example `StringWrapperTest`) with following command line:
 
 ```bash
-$ JAVA_HOME=/jdk-8/ ant -f make/langtools/netbeans/nb-javac test \
+$ JAVA_HOME=/jdk-8/ mvn test \
     -Dincludes=**/StringWrapperTest* \
     -Ddebug.jvmargs=-agentlib:jdwp=transport=dt_socket,server=y,address=5005,suspend=y
 ```

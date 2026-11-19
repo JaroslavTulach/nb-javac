@@ -9,10 +9,9 @@ JDKs!
 
 ## Prerequisite
   - Git
-  - Ant 1.9.9 or above
+  - Apache Maven
   - JDK 25 to build
   - JDK 8 to test
-  - Apache Maven to publish to Maven central
 
 ## Building nb-javac jar files
 
@@ -35,20 +34,22 @@ $ git checkout <release_tag_name>
 ### Run the below command to build nb-javac.
 
 ```bash
-$ JAVA_HOME=/jdk-25/ ant -f ./make/langtools/netbeans/nb-javac clean jar
+$ JAVA_HOME=/jdk-25/ mvn clean package -DskipTests
 ```
 
 Two jars namely `nb-javac-*-api.jar` and `nb-javac-*-impl.jar` are going to appear
 at location `./make/langtools/netbeans/nb-javac/dist/`. It is also possible to
 sanity test the generated Javac on JDK8:
 ```bash
-$ JAVA_HOME=/jdk-8/ ant -f ./make/langtools/netbeans/nb-javac test
+$ JAVA_HOME=/jdk-8/ mvn test
 ```
 
 ### Generate ZIP with the source code of nb-javac
 
+The ZIP is created in `./make/langtools/netbeans/nb-javac/dist/` by the `package` phase:
+
 ```bash
-$ JAVA_HOME=/jdk-25/ ant -f ./make/langtools/netbeans/nb-javac zip-nb-javac-sources
+$ JAVA_HOME=/jdk-25/ mvn package -DskipTests
 ```
 
 # Publishing to maven central / OSSRH
@@ -61,13 +62,13 @@ $ JAVA_HOME=/jdk-25/ ant -f ./make/langtools/netbeans/nb-javac zip-nb-javac-sour
 
 3. Run
    ```
-   JAVA_HOME=/jdk-25/ ant -f ./make/langtools/netbeans/nb-javac publish-to-ossrh-snapshots -Dmaven.groupId=your.grp.id
+   JAVA_HOME=/jdk-25/ mvn deploy -DskipTests -Possrh-snapshots -Dmaven.groupId=your.grp.id
    ```
    to publish snapshot artifacts (https://oss.sonatype.org/content/repositories/snapshots/)
 
 4. Run
    ```
-   JAVA_HOME=/jdk-25/ ant -f ./make/langtools/netbeans/nb-javac publish-to-maven-central -Dmaven.groupId=your.grp.id
+   JAVA_HOME=/jdk-25/ mvn deploy -DskipTests -Pmaven-central -Dmaven.groupId=your.grp.id
    ```
    to stage the release, which will get promoted to maven central, after it has
    been manually released.

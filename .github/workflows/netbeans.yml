@@ -56,9 +56,9 @@ jobs:
         run: echo "$JAVA_HOME" | tee jdk25
 
       - name: Jackpot on JDK25
-        run: ant -f make/langtools/netbeans/nb-javac clean jackpot generate-files
+        run: mvn -B clean generate-sources
       - name: Finish Build on JDK8
-        run: JAVA_HOME=`cat jdk8` ant -f make/langtools/netbeans/nb-javac jar
+        run: JAVA_HOME=`cat jdk8` mvn -B package -DskipTests
 
       - name: Check NetBeans out
         run: |
