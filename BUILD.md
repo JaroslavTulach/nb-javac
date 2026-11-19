@@ -44,9 +44,10 @@ $ JAVA_HOME=/jdk-25/ mvn initialize
 The _initialization step_ needs to know the _exact commit_ to checkout. Also
 it needs to know the OpenJDK like repository to check the sources from.
 Default values of these `jdk.git.url` and `jdk.git.commit` properties
-are provided in a dedicated
-[./make/langtools/netbeans/nb-javac/nbproject/project.properties](https://github.com/JaroslavTulach/nb-javac/blob/master/make/langtools/netbeans/nb-javac/nbproject/project.properties)
-file. Those default values can be optionally overriden from a command line:
+are provided in the [pom.xml](pom.xml) file. The version of the produced artifacts
+(`com.dukescript.nbjavac:nb-javac`) defaults to the `jdk.git.commit` and can be changed
+with `-Drevision=...`.
+Those default values can be optionally overriden from a command line:
 
 ```bash
 $ JAVA_HOME=/jdk-25/ mvn initialize \

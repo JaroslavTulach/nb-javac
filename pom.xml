@@ -4,15 +4,52 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.netbeans.external</groupId>
-  <artifactId>nb-javac-build</artifactId>
-  <version>1.0-SNAPSHOT</version>
-  <!-- Only wraps the Ant build; real artifacts are produced in make/langtools/netbeans/nb-javac/dist -->
+  <groupId>com.dukescript.nbjavac</groupId>
+  <artifactId>nb-javac</artifactId>
+  <version>${revision}</version>
+  <!-- The jars are built by the Ant build and attached to the project in the package phase -->
   <packaging>pom</packaging>
 
-  <name>nb-javac build wrapper</name>
+  <name>nb-javac</name>
+  <description>
+      `nb-javac` is a "backport" of OpenJDK `javac`, i.e., the Java compiler.
+      It allows to run the latest OpenJDK compiler on older JDKs - as old
+      as JDK8 while being 1:1 identical with the official `javac`.
+      Use `nb-javac` to execute the latest Java language compiler on old
+      JDKs!
+  </description>
+  <url>https://github.com/jaroslavtulach/nb-javac</url>
+
+  <licenses>
+    <license>
+      <name>GPLv2-CPE</name>
+      <url>https://openjdk.java.net/legal/gplv2+ce.html</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <scm>
+    <connection>scm:git:https://github.com/jaroslavtulach/nb-javac.git</connection>
+    <developerConnection>scm:git:git@github.com:jaroslavtulach/nb-javac.git</developerConnection>
+    <url>https://github.com/jaroslavtulach/nb-javac</url>
+  </scm>
+
+  <developers>
+    <developer>
+      <email>jaroslav.tulach@apidesign.org</email>
+      <name>Jaroslav Tulach</name>
+      <url>https://github.com/jaroslavtulach</url>
+      <roles>
+        <role>Developer</role>
+      </roles>
+    </developer>
+  </developers>
 
   <properties>
+    <!-- OpenJDK sources to build from, the version of the artifacts follows the commit/tag -->
+    <jdk.git.url>https://github.com/openjdk/jdk</jdk.git.url>
+    <jdk.git.commit>jdk-28+23</jdk.git.commit>
+    <revision>${jdk.git.commit}</revision>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <skipTests>false</skipTests>
     <!-- artifacts are published by the Ant targets from the profiles below -->
@@ -64,6 +101,57 @@
               </sources>
             </configuration>
           </execution>
+          <execution>
+            <id>attach-artifacts</id>
+            <phase>package</phase>
+            <goals>
+              <goal>attach-artifact</goal>
+            </goals>
+            <configuration>
+              <artifacts>
+                <artifact>
+                  <file>${nbjavac.ant.dir}/dist/nb-javac-${jdk.git.commit}-impl.jar</file>
+                  <type>jar</type>
+                </artifact>
+                <artifact>
+                  <file>${nbjavac.ant.dir}/dist/nb-javac-${jdk.git.commit}-api.jar</file>
+                  <type>jar</type>
+                  <classifier>api</classifier>
+                </artifact>
+                <artifact>
+                  <file>${nbjavac.ant.dir}/dist/nb-javac-${jdk.git.commit}-sources.zip</file>
+                  <type>jar</type>
+                  <classifier>sources</classifier>
+                </artifact>
+              </artifacts>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <!-- publishes the pom with ${revision} resolved -->
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>flatten-maven-plugin</artifactId>
+        <version>1.7.0</version>
+        <configuration>
+          <updatePomFile>true</updatePomFile>
+          <flattenMode>ossrh</flattenMode>
+        </configuration>
+        <executions>
+          <execution>
+            <id>flatten</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>flatten</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>flatten-clean</id>
+            <phase>clean</phase>
+            <goals>
+              <goal>clean</goal>
+            </goals>
+          </execution>
         </executions>
       </plugin>
       <plugin>
@@ -105,6 +193,8 @@
             <configuration>
               <target>
                 <ant dir="${nbjavac.ant.dir}" target="clean" inheritAll="false">
+                  <property name="jdk.git.url" value="${jdk.git.url}"/>
+                  <property name="jdk.git.commit" value="${jdk.git.commit}"/>
                   <propertyset>
                     <propertyref builtin="commandline"/>
                   </propertyset>
@@ -121,6 +211,8 @@
             <configuration>
               <target>
                 <ant dir="${nbjavac.ant.dir}" target="init" inheritAll="false">
+                  <property name="jdk.git.url" value="${jdk.git.url}"/>
+                  <property name="jdk.git.commit" value="${jdk.git.commit}"/>
                   <propertyset>
                     <propertyref builtin="commandline"/>
                   </propertyset>
@@ -137,6 +229,8 @@
             <configuration>
               <target>
                 <ant dir="${nbjavac.ant.dir}" target="generate-files" inheritAll="false">
+                  <property name="jdk.git.url" value="${jdk.git.url}"/>
+                  <property name="jdk.git.commit" value="${jdk.git.commit}"/>
                   <propertyset>
                     <propertyref builtin="commandline"/>
                   </propertyset>
@@ -153,6 +247,8 @@
             <configuration>
               <target>
                 <ant dir="${nbjavac.ant.dir}" target="compile" inheritAll="false">
+                  <property name="jdk.git.url" value="${jdk.git.url}"/>
+                  <property name="jdk.git.commit" value="${jdk.git.commit}"/>
                   <propertyset>
                     <propertyref builtin="commandline"/>
                   </propertyset>
@@ -170,6 +266,8 @@
                 <skip>${skipTests}</skip>
               <target>
                 <ant dir="${nbjavac.ant.dir}" target="test" inheritAll="false">
+                  <property name="jdk.git.url" value="${jdk.git.url}"/>
+                  <property name="jdk.git.commit" value="${jdk.git.commit}"/>
                   <propertyset>
                     <propertyref builtin="commandline"/>
                   </propertyset>
@@ -186,6 +284,8 @@
             <configuration>
               <target>
                 <ant dir="${nbjavac.ant.dir}" target="jar" inheritAll="false">
+                  <property name="jdk.git.url" value="${jdk.git.url}"/>
+                  <property name="jdk.git.commit" value="${jdk.git.commit}"/>
                   <propertyset>
                     <propertyref builtin="commandline"/>
                   </propertyset>
@@ -202,6 +302,8 @@
             <configuration>
               <target>
                 <ant dir="${nbjavac.ant.dir}" target="zip-nb-javac-sources" inheritAll="false">
+                  <property name="jdk.git.url" value="${jdk.git.url}"/>
+                  <property name="jdk.git.commit" value="${jdk.git.commit}"/>
                   <propertyset>
                     <propertyref builtin="commandline"/>
                   </propertyset>
@@ -232,6 +334,8 @@
                 <configuration>
                   <target>
                     <ant dir="${nbjavac.ant.dir}" target="publish-to-ossrh-snapshots" inheritAll="false">
+                      <property name="jdk.git.url" value="${jdk.git.url}"/>
+                      <property name="jdk.git.commit" value="${jdk.git.commit}"/>
                       <propertyset>
                         <propertyref builtin="commandline"/>
                       </propertyset>
@@ -261,6 +365,8 @@
                 <configuration>
                   <target>
                     <ant dir="${nbjavac.ant.dir}" target="publish-to-maven-central" inheritAll="false">
+                      <property name="jdk.git.url" value="${jdk.git.url}"/>
+                      <property name="jdk.git.commit" value="${jdk.git.commit}"/>
                       <propertyset>
                         <propertyref builtin="commandline"/>
                       </propertyset>

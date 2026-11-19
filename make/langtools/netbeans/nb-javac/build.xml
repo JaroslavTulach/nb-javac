@@ -101,6 +101,8 @@
     </target>
     
     <target name="-pre-init">
+        <fail unless="jdk.git.url" message="Property jdk.git.url is not defined. Build with Maven (mvn) or specify -Djdk.git.url=..."/>
+        <fail unless="jdk.git.commit" message="Property jdk.git.commit is not defined. Build with Maven (mvn) or specify -Djdk.git.commit=..."/>
         <mkdir dir="build/lib"/>
         <mkdir dir="${tools.dir}"/>
         <get dest="${tools.dir}/jackpot.jar" skipexisting="true" src="https://repo1.maven.org/maven2/org/apache/netbeans/modules/jackpot30/tool/28.0/tool-28.0.jar"/>
