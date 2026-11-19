@@ -16,6 +16,10 @@ in the `jdk` subdirectory and integrated into the JDK's `javac` **official repos
 $ JAVA_HOME=/jdk-25/ ant -f ./make/langtools/netbeans/nb-javac jar
 ```
 
+Alternatively run `mvn package` in the root directory. The [pom.xml](pom.xml) just
+delegates to the same `ant` build (via `maven-antrun-plugin`); the resulting jars
+appear in `make/langtools/netbeans/nb-javac/dist`.
+
 Use the above command to build everything at once. Read below to control individual steps of the build.
 
 
