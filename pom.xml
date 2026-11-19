@@ -230,7 +230,15 @@
             <version>1.10.15</version>
           </dependency>
         </dependencies>
-        <!-- -D properties given on the Maven command line (e.g. jdk.git.url, jdk.git.commit) are passed to Ant -->
+        <!--
+          All Maven properties, including -D ones (e.g. jdk.git.url, jdk.git.commit), are inherited by Ant.
+          The executions below only specify the Ant target to run.
+        -->
+        <configuration>
+          <target>
+            <ant dir="${nbjavac.ant.dir}" inheritAll="true"/>
+          </target>
+        </configuration>
         <executions>
           <execution>
             <id>clean</id>
@@ -240,13 +248,7 @@
             </goals>
             <configuration>
               <target>
-                <ant dir="${nbjavac.ant.dir}" target="clean" inheritAll="false">
-                  <property name="jdk.git.url" value="${jdk.git.url}"/>
-                  <property name="jdk.git.commit" value="${jdk.git.commit}"/>
-                  <propertyset>
-                    <propertyref builtin="commandline"/>
-                  </propertyset>
-                </ant>
+                <ant target="clean"/>
               </target>
             </configuration>
           </execution>
@@ -258,13 +260,7 @@
             </goals>
             <configuration>
               <target>
-                <ant dir="${nbjavac.ant.dir}" target="init" inheritAll="false">
-                  <property name="jdk.git.url" value="${jdk.git.url}"/>
-                  <property name="jdk.git.commit" value="${jdk.git.commit}"/>
-                  <propertyset>
-                    <propertyref builtin="commandline"/>
-                  </propertyset>
-                </ant>
+                <ant target="init"/>
               </target>
             </configuration>
           </execution>
@@ -276,13 +272,7 @@
             </goals>
             <configuration>
               <target>
-                <ant dir="${nbjavac.ant.dir}" target="generate-files" inheritAll="false">
-                  <property name="jdk.git.url" value="${jdk.git.url}"/>
-                  <property name="jdk.git.commit" value="${jdk.git.commit}"/>
-                  <propertyset>
-                    <propertyref builtin="commandline"/>
-                  </propertyset>
-                </ant>
+                <ant target="generate-files"/>
               </target>
             </configuration>
           </execution>
@@ -294,13 +284,7 @@
             </goals>
             <configuration>
               <target>
-                <ant dir="${nbjavac.ant.dir}" target="compile" inheritAll="false">
-                  <property name="jdk.git.url" value="${jdk.git.url}"/>
-                  <property name="jdk.git.commit" value="${jdk.git.commit}"/>
-                  <propertyset>
-                    <propertyref builtin="commandline"/>
-                  </propertyset>
-                </ant>
+                <ant target="compile"/>
               </target>
             </configuration>
           </execution>
@@ -313,13 +297,7 @@
             <configuration>
                 <skip>${skipTests}</skip>
               <target>
-                <ant dir="${nbjavac.ant.dir}" target="test" inheritAll="false">
-                  <property name="jdk.git.url" value="${jdk.git.url}"/>
-                  <property name="jdk.git.commit" value="${jdk.git.commit}"/>
-                  <propertyset>
-                    <propertyref builtin="commandline"/>
-                  </propertyset>
-                </ant>
+                <ant target="test"/>
               </target>
             </configuration>
           </execution>
@@ -331,13 +309,7 @@
             </goals>
             <configuration>
               <target>
-                <ant dir="${nbjavac.ant.dir}" target="jar" inheritAll="false">
-                  <property name="jdk.git.url" value="${jdk.git.url}"/>
-                  <property name="jdk.git.commit" value="${jdk.git.commit}"/>
-                  <propertyset>
-                    <propertyref builtin="commandline"/>
-                  </propertyset>
-                </ant>
+                <ant target="jar"/>
               </target>
             </configuration>
           </execution>
@@ -349,13 +321,7 @@
             </goals>
             <configuration>
               <target>
-                <ant dir="${nbjavac.ant.dir}" target="zip-nb-javac-sources" inheritAll="false">
-                  <property name="jdk.git.url" value="${jdk.git.url}"/>
-                  <property name="jdk.git.commit" value="${jdk.git.commit}"/>
-                  <propertyset>
-                    <propertyref builtin="commandline"/>
-                  </propertyset>
-                </ant>
+                <ant target="zip-nb-javac-sources"/>
               </target>
             </configuration>
           </execution>
@@ -381,13 +347,7 @@
                 </goals>
                 <configuration>
                   <target>
-                    <ant dir="${nbjavac.ant.dir}" target="publish-to-ossrh-snapshots" inheritAll="false">
-                      <property name="jdk.git.url" value="${jdk.git.url}"/>
-                      <property name="jdk.git.commit" value="${jdk.git.commit}"/>
-                      <propertyset>
-                        <propertyref builtin="commandline"/>
-                      </propertyset>
-                    </ant>
+                    <ant target="publish-to-ossrh-snapshots"/>
                   </target>
                 </configuration>
               </execution>
@@ -412,13 +372,7 @@
                 </goals>
                 <configuration>
                   <target>
-                    <ant dir="${nbjavac.ant.dir}" target="publish-to-maven-central" inheritAll="false">
-                      <property name="jdk.git.url" value="${jdk.git.url}"/>
-                      <property name="jdk.git.commit" value="${jdk.git.commit}"/>
-                      <propertyset>
-                        <propertyref builtin="commandline"/>
-                      </propertyset>
-                    </ant>
+                    <ant target="publish-to-maven-central"/>
                   </target>
                 </configuration>
               </execution>
