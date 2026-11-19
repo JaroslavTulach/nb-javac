@@ -67,9 +67,11 @@
   </dependencies>
 
   <build>
+    <sourceDirectory>${project.basedir}/make/langtools/netbeans/nb-javac/src</sourceDirectory>
+    <testSourceDirectory>${project.basedir}/make/langtools/netbeans/nb-javac/test</testSourceDirectory>
     <plugins>
       <plugin>
-        <!-- Declares source roots for IDEs; compilation itself is done by the Ant build -->
+        <!-- Declares the remaining main source roots for IDEs; compilation itself is done by the Ant build -->
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
         <version>3.6.0</version>
@@ -85,19 +87,6 @@
                 <source>${project.basedir}/src/java.compiler/share/classes</source>
                 <source>${project.basedir}/src/jdk.compiler/share/classes</source>
                 <source>${project.basedir}/src/jdk.jdeps/share/classes</source>
-                <source>${project.basedir}/make/langtools/netbeans/nb-javac/src</source>
-              </sources>
-            </configuration>
-          </execution>
-          <execution>
-            <id>add-test-source</id>
-            <phase>generate-test-sources</phase>
-            <goals>
-              <goal>add-test-source</goal>
-            </goals>
-            <configuration>
-              <sources>
-                <source>${project.basedir}/make/langtools/netbeans/nb-javac/test</source>
               </sources>
             </configuration>
           </execution>
