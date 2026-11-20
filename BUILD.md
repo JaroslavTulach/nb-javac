@@ -102,10 +102,10 @@ at location `./make/langtools/netbeans/nb-javac/dist/`.
 
 ### Debug & Develop
 
-Open the `nb-javac` project in NetBeans IDE with
+Open the `nb-javac` project (a regular Maven project) in NetBeans IDE with
 
 ```bash
-$ netbeans --open make/langtools/netbeans/nb-javac/
+$ netbeans --open .
 ```
 
 and you should be able to debug a test (for example `StringWrapperTest`) with following command line:
