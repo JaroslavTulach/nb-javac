@@ -52,7 +52,7 @@
     <revision>${jdk.git.commit}</revision>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-    <!-- artifacts are published by the Ant targets from the profiles below -->
+    <!-- deploying is enabled by the release profile -->
     <maven.deploy.skip>true</maven.deploy.skip>
     <nbjavac.tools.dir>${project.basedir}/lib</nbjavac.tools.dir>
     <nbjavac.ant.dir>${project.basedir}/make/langtools/netbeans/nb-javac</nbjavac.ant.dir>
@@ -207,7 +207,7 @@
           </execution>
           <execution>
             <id>attach-sources-zip</id>
-            <phase>verify</phase>
+            <phase>package</phase>
             <goals>
               <goal>attach-artifact</goal>
             </goals>
@@ -231,6 +231,10 @@
         <configuration>
           <updatePomFile>true</updatePomFile>
           <flattenMode>ossrh</flattenMode>
+          <pomElements>
+            <!-- the dependencies are only used to build nb-javac -->
+            <dependencies>remove</dependencies>
+          </pomElements>
         </configuration>
         <executions>
           <execution>
@@ -457,8 +461,9 @@
             </configuration>
           </execution>
           <execution>
+            <!-- before the package phase which attaches the zip to the project -->
             <id>sources-zip</id>
-            <phase>package</phase>
+            <phase>prepare-package</phase>
             <goals>
               <goal>run</goal>
             </goals>
@@ -494,53 +499,67 @@
         <argLine>-Ddebug=false --limit-modules java.base,java.xml,jdk.zipfs,java.management</argLine>
       </properties>
     </profile>
-    <!-- both publishing profiles need -Dmaven.groupId=your.grp.id -->
     <profile>
-      <id>ossrh-snapshots</id>
+      <!--
+        Signs the artifacts and uploads them directly to the Maven Central by
+          mvn clean deploy -DskipTests -Prelease
+        The credentials (a Central Portal user token) are expected in settings.xml
+        as the server with id "central". Use -Dcentral.skipUpload=true to only create
+        the bundle target/central-publishing/central-bundle.zip without uploading it.
+      -->
+      <id>release</id>
+      <properties>
+        <maven.deploy.skip>false</maven.deploy.skip>
+        <central.skipUpload>false</central.skipUpload>
+      </properties>
       <build>
         <plugins>
           <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-antrun-plugin</artifactId>
+            <!-- Central requires a javadoc jar, there is no Java API documentation of nb-javac to put in -->
+            <artifactId>maven-jar-plugin</artifactId>
             <executions>
               <execution>
-                <id>ossrh-snapshots</id>
-                <phase>deploy</phase>
+                <id>javadoc-jar</id>
+                <phase>package</phase>
                 <goals>
-                  <goal>run</goal>
+                  <goal>jar</goal>
                 </goals>
                 <configuration>
-                  <target>
-                    <ant target="publish-to-ossrh-snapshots"/>
-                  </target>
+                  <classifier>javadoc</classifier>
+                  <classesDirectory>${project.basedir}</classesDirectory>
+                  <includes>
+                    <include>README.md</include>
+                    <include>SECURITY.md</include>
+                    <include>LICENSE.txt</include>
+                    <include>CONTRIBUTING.md</include>
+                  </includes>
                 </configuration>
               </execution>
             </executions>
           </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <profile>
-      <id>maven-central</id>
-      <build>
-        <plugins>
           <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-antrun-plugin</artifactId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>3.2.8</version>
             <executions>
               <execution>
-                <id>maven-central</id>
-                <phase>deploy</phase>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
                 <goals>
-                  <goal>run</goal>
+                  <goal>sign</goal>
                 </goals>
-                <configuration>
-                  <target>
-                    <ant target="publish-to-maven-central"/>
-                  </target>
-                </configuration>
               </execution>
             </executions>
+          </plugin>
+          <plugin>
+            <!-- the deploy phase uploads a bundle to the Central Portal; it has to be published manually there -->
+            <groupId>org.sonatype.central</groupId>
+            <artifactId>central-publishing-maven-plugin</artifactId>
+            <version>0.12.0</version>
+            <extensions>true</extensions>
+            <configuration>
+              <publishingServerId>central</publishingServerId>
+              <skipUpload>${central.skipUpload}</skipUpload>
+            </configuration>
           </plugin>
         </plugins>
       </build>

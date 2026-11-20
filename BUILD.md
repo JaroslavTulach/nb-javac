@@ -26,7 +26,7 @@ the standard Maven lifecycle phases:
 | `compile` | compiles the sources with the [Frgaal](https://frgaal.org) compiler into Java 8 bytecode (and the `SourceVersion` for Java 11) |
 | `test` | compiles and runs the tests with `surefire` (skip with `-DskipTests`, run one with `-Dtest=StringWrapperTest`) |
 | `package` | creates the `api` and implementation jars and the sources zip |
-| `deploy` | publishes the artifacts (see the profiles in [pom.xml](pom.xml) and the [README](README.md)) |
+| `deploy` | with the `release` profile signs and deploys the artifacts (see the [README](README.md)) |
 
 Any `-Dkey=value` given to `mvn` is passed to the build. Read below to control individual steps of the build.
 
