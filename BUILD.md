@@ -60,7 +60,8 @@ a developer may clone the `jdk` repository manually, switch its content to any o
 make changes in the `jdk/src/java.compiler/` or `jdk/src/jdk.compiler/` directories,
 etc.
 
-One can discard any changes by `rm -rf jdk`. Then the subsequent build checks
+One can discard any changes by `mvn clean -Dclean.jdk=true`, which removes the `jdk` directory
+(a regular `mvn clean` leaves it alone). Then the subsequent build checks
 a fresh copy of the `jdk` repository from scratch.
 
 ### Automatically processing the sources

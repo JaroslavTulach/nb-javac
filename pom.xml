@@ -122,6 +122,18 @@
     </resources>
     <plugins>
       <plugin>
+        <!-- besides target, the sources processed by jackpot are removed; see the clean-jdk profile as well -->
+        <artifactId>maven-clean-plugin</artifactId>
+        <version>3.5.0</version>
+        <configuration>
+          <filesets>
+            <fileset>
+              <directory>${project.basedir}/src</directory>
+            </fileset>
+          </filesets>
+        </configuration>
+      </plugin>
+      <plugin>
         <!-- the jackpot tool used by the Ant build; it is copied to its tools.dir -->
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
@@ -425,18 +437,6 @@
         </configuration>
         <executions>
           <execution>
-            <id>clean</id>
-            <phase>clean</phase>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <configuration>
-              <target>
-                <ant target="clean"/>
-              </target>
-            </configuration>
-          </execution>
-          <execution>
             <id>checkout-jdk</id>
             <phase>initialize</phase>
             <goals>
@@ -478,6 +478,34 @@
     </plugins>
   </build>
   <profiles>
+    <profile>
+      <!--
+        mvn clean -Dclean.jdk=true
+        also removes the checkout of the OpenJDK repository including any local changes in it.
+        The next build clones it again, which takes a while.
+      -->
+      <id>clean-jdk</id>
+      <activation>
+        <property>
+          <name>clean.jdk</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-clean-plugin</artifactId>
+            <configuration>
+              <filesets combine.children="append">
+                <fileset>
+                  <directory>${project.basedir}/jdk</directory>
+                </fileset>
+              </filesets>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
     <profile>
       <!-- on JDK 8 the nb-javac classes have to precede the JDK's own javax.tools etc. -->
       <id>jdk8-tests</id>

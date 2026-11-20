@@ -50,10 +50,6 @@
 
     <target name="init" depends="-check-properties,-checkout-jdk" description="Checks the OpenJDK sources out."/>
 
-    <target name="clean" description="Deletes the sources processed by jackpot.">
-        <delete dir="${src.dir}"/>
-    </target>
-
     <target name="-check-generated-files">
         <uptodate property="generated.files.up.to.date"
                   srcfile="${src.dir}/jdk.compiler/share/classes/com/sun/tools/javac/code/Flags.java"
