@@ -44,9 +44,9 @@ sanity test the generated Javac on JDK8:
 $ JAVA_HOME=/jdk-8/ mvn test
 ```
 
-### Generate ZIP with the source code of nb-javac
+### Generate JAR with the source code of nb-javac
 
-The ZIP is created in the `./target/` directory by the `package` phase:
+The `nb-javac-*-sources.jar` is created in the `./target/` directory by the `package` phase:
 
 ```bash
 $ JAVA_HOME=/jdk-25/ mvn package -DskipTests

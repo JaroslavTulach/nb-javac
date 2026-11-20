@@ -7,7 +7,7 @@
   <groupId>com.dukescript.nbjavac</groupId>
   <artifactId>nb-javac</artifactId>
   <version>${revision}</version>
-  <!-- The jars are created by the standard lifecycle, the sources zip is attached in the verify phase -->
+  <!-- The jars, including the sources one, are created by the standard lifecycle -->
   <packaging>jar</packaging>
 
   <name>nb-javac</name>
@@ -56,8 +56,6 @@
     <maven.deploy.skip>true</maven.deploy.skip>
     <nbjavac.tools.dir>${project.basedir}/lib</nbjavac.tools.dir>
     <nbjavac.ant.dir>${project.basedir}/make/langtools/netbeans/nb-javac</nbjavac.ant.dir>
-    <!-- inherited by Ant: where it creates the sources zip and prepares the publishing -->
-    <dist.dir>${project.build.directory}</dist.dir>
   </properties>
 
   <dependencies>
@@ -217,22 +215,6 @@
               </sources>
             </configuration>
           </execution>
-          <execution>
-            <id>attach-sources-zip</id>
-            <phase>package</phase>
-            <goals>
-              <goal>attach-artifact</goal>
-            </goals>
-            <configuration>
-              <artifacts>
-                <artifact>
-                  <file>${project.build.directory}/nb-javac-${jdk.git.commit}-sources.zip</file>
-                  <type>jar</type>
-                  <classifier>sources</classifier>
-                </artifact>
-              </artifacts>
-            </configuration>
-          </execution>
         </executions>
       </plugin>
       <plugin>
@@ -379,6 +361,35 @@
             </configuration>
           </execution>
           <execution>
+            <!-- the sources of nb-javac are the processed ones -->
+            <id>sources-jar</id>
+            <phase>package</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+            <configuration>
+              <classifier>sources</classifier>
+              <classesDirectory>${project.basedir}</classesDirectory>
+              <includes>
+                <include>src/java.base/**</include>
+                <include>src/jdk.compiler/**</include>
+                <include>src/java.compiler/**</include>
+                <include>make/langtools/netbeans/nb-javac/**</include>
+                <include>make/langtools/tools/**</include>
+                <include>make/langtools/build.xml</include>
+                <include>make/langtools/build.properties</include>
+                <include>README.md</include>
+                <include>SECURITY.md</include>
+                <include>LICENSE.txt</include>
+                <include>CONTRIBUTING.md</include>
+              </includes>
+              <excludes>
+                <exclude>**/build/**</exclude>
+                <exclude>**/dist/**</exclude>
+              </excludes>
+            </configuration>
+          </execution>
+          <execution>
             <id>api-jar</id>
             <phase>package</phase>
             <goals>
@@ -457,19 +468,6 @@
             <configuration>
               <target>
                 <ant target="generate-files"/>
-              </target>
-            </configuration>
-          </execution>
-          <execution>
-            <!-- before the package phase which attaches the zip to the project -->
-            <id>sources-zip</id>
-            <phase>prepare-package</phase>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <configuration>
-              <target>
-                <ant target="zip-nb-javac-sources"/>
               </target>
             </configuration>
           </execution>

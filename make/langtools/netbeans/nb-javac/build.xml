@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-    Helper script called from the root pom.xml. It prepares the sources
-    and creates the sources zip. The classes are compiled, tested and
-    packaged by Maven. Do not call this script directly, use `mvn`.
+    Helper script called from the root pom.xml. It prepares the sources.
+    The classes are compiled, tested and packaged by Maven.
+    Do not call this script directly, use `mvn`.
 -->
 <project name="nb-javac" default="generate-files" basedir=".">
     <description>Prepares sources of nb-javac.</description>
 
-    <!-- jdk.git.url, jdk.git.commit and dist.dir are defined by pom.xml -->
-    <property name="nb-javac-ver" value="${jdk.git.commit}"/>
-
+    <!-- jdk.git.url and jdk.git.commit are defined by pom.xml -->
     <property name="root" location="../../../.."/>
     <property name="jdk.repo" location="${root}/jdk"/>
     <property name="src.dir" location="${root}/src"/>
@@ -18,7 +16,6 @@
     <target name="-check-properties">
         <fail unless="jdk.git.url" message="Property jdk.git.url is not defined. Build with Maven (mvn) or specify -Djdk.git.url=..."/>
         <fail unless="jdk.git.commit" message="Property jdk.git.commit is not defined. Build with Maven (mvn) or specify -Djdk.git.commit=..."/>
-        <fail unless="dist.dir" message="Property dist.dir is not defined. Build with Maven (mvn)."/>
         <fail message="Build tools are missing in ${tools.dir}. They are downloaded by Maven, run 'mvn initialize'.">
             <condition>
                 <not>
@@ -133,26 +130,5 @@
             <arg value="${src.dir}/jdk.compiler/share/classes"/>
         </java>
         <echo file="${src.dir}/jackpot-done">Jackpot done!</echo>
-    </target>
-
-    <target name="zip-nb-javac-sources" depends="init">
-        <zip basedir="${root}" destfile="${dist.dir}/nb-javac-${nb-javac-ver}-sources.zip">
-            <exclude name="**/build/"/>
-            <exclude name="**/dist/"/>
-            <exclude name="**/nb-javac-sources.zip"/>
-            <include name="src/java.base/**"/>
-            <include name="src/jdk.compiler/**"/>
-            <include name="src/java.compiler/**"/>
-            <include name="make/langtools/netbeans/nb-javac/**"/>
-            <include name="README.md"/>
-            <include name="SECURITY.md"/>
-            <include name="LICENSE.txt"/>
-            <include name=".hgignore"/>
-            <include name=".hgtags"/>
-            <include name="CONTRIBUTING.md"/>
-            <include name="make/langtools/tools/**"/>
-            <include name="make/langtools/build.xml"/>
-            <include name="make/langtools/build.properties"/>
-        </zip>
     </target>
 </project>
