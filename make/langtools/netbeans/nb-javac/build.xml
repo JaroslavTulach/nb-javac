@@ -171,6 +171,10 @@
                             <filename name="java.compiler/**"/>
                             <filename name="jdk.compiler/**"/>
                         </or>
+                        <!-- module descriptors are not compiled and would put the Maven compiler into module mode -->
+                        <not>
+                            <filename name="**/module-info.java"/>
+                        </not>
                         <containsregexp expression="particular *file *as *subject *to *the.*Classpath.*exception"/>
                     </and>
                 </selector>
@@ -216,6 +220,16 @@
                 <include name="com/sun/tools/javap/**" />
             </patternset>
         </unzip>
+    </target>
+
+    <!-- Same as the imported -do-compile, but Maven (-Dmaven.compiled=true) has already compiled the classes -->
+    <target name="-do-compile" depends="init,deps-jar,-pre-pre-compile,-pre-compile,-copy-persistence-xml,-compile-depend" if="have.sources" unless="maven.compiled">
+        <j2seproject3:javac gensrcdir="${build.generated.sources.dir}"/>
+        <copy todir="${build.classes.dir}">
+            <fileset dir="${src.src.dir}" excludes="${build.classes.excludes},${excludes}" includes="${includes}"/>
+            <fileset dir="${src.classes2.dir}" excludes="${build.classes.excludes},${excludes}" includes="${includes}"/>
+            <fileset dir="${src.classes3.dir}" excludes="${build.classes.excludes},${excludes}" includes="${includes}"/>
+        </copy>
     </target>
 
     <target name="-init-macrodef-javac">

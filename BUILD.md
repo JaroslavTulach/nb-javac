@@ -23,8 +23,8 @@ the standard Maven lifecycle phases:
 | ----- | ------------ |
 | `initialize` | checks the OpenJDK sources out into `jdk` (see below) |
 | `generate-sources` | applies the automatic refactorings to the sources (see below) |
-| `compile` | compiles the sources |
-| `test` | runs the tests (skip with `-DskipTests`) |
+| `compile` | compiles the sources with the [Frgaal](https://frgaal.org) compiler into Java 8 bytecode |
+| `test` | compiles and runs the tests with `surefire` (skip with `-DskipTests`, run one with `-Dtest=StringWrapperTest`) |
 | `package` | creates the `api` and `impl` jars and the sources zip |
 | `deploy` | publishes the artifacts (see the profiles in [pom.xml](pom.xml) and the [README](README.md)) |
 
@@ -111,10 +111,9 @@ $ netbeans --open make/langtools/netbeans/nb-javac/
 and you should be able to debug a test (for example `StringWrapperTest`) with following command line:
 
 ```bash
-$ JAVA_HOME=/jdk-8/ mvn test \
-    -Dincludes=**/StringWrapperTest* \
-    -Ddebug.jvmargs=-agentlib:jdwp=transport=dt_socket,server=y,address=5005,suspend=y
+$ JAVA_HOME=/jdk-8/ mvn test -Dtest=StringWrapperTest -Dmaven.surefire.debug
 ```
 
+The test JVM waits for a debugger on port 5005.
 Connect the NetBeans IDE to port 5005 and step through the `nb-javac`
 generated code.

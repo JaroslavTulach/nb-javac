@@ -51,14 +51,24 @@
     <jdk.git.commit>jdk-28+23</jdk.git.commit>
     <revision>${jdk.git.commit}</revision>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <skipTests>false</skipTests>
+
     <!-- artifacts are published by the Ant targets from the profiles below -->
     <maven.deploy.skip>true</maven.deploy.skip>
     <nbjavac.tools.dir>${project.basedir}/lib</nbjavac.tools.dir>
     <nbjavac.ant.dir>${project.basedir}/make/langtools/netbeans/nb-javac</nbjavac.ant.dir>
+    <!-- inherited by Ant: the classes are compiled by Maven, Ant only assembles the jars from them -->
+    <maven.compiled>true</maven.compiled>
+    <build.classes.dir>${project.build.outputDirectory}</build.classes.dir>
   </properties>
 
   <dependencies>
+    <dependency>
+      <!-- provides com.sun.tools.javap, com.sun.tools.classfile and nbjavac.sun.annotation which are not compiled from the JDK sources -->
+      <groupId>com.dukescript.nbjavac</groupId>
+      <artifactId>nb-javac</artifactId>
+      <version>jdk-21u</version>
+      <scope>provided</scope>
+    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -70,6 +80,39 @@
   <build>
     <sourceDirectory>${project.basedir}/make/langtools/netbeans/nb-javac/src</sourceDirectory>
     <testSourceDirectory>${project.basedir}/make/langtools/netbeans/nb-javac/test</testSourceDirectory>
+    <testResources>
+      <!-- prebuilt class files used as test data -->
+      <testResource>
+        <directory>${project.basedir}/make/langtools/netbeans/nb-javac/test</directory>
+        <includes>
+          <include>**/*.class</include>
+        </includes>
+      </testResource>
+    </testResources>
+    <resources>
+      <resource>
+        <directory>${project.basedir}/make/langtools/netbeans/nb-javac/src</directory>
+        <excludes>
+          <exclude>**/*.java</exclude>
+        </excludes>
+      </resource>
+      <resource>
+        <directory>${project.basedir}/src/java.compiler/share/classes</directory>
+        <excludes>
+          <exclude>**/*.java</exclude>
+        </excludes>
+      </resource>
+      <resource>
+        <directory>${project.basedir}/src/jdk.compiler/share/classes</directory>
+        <excludes>
+          <exclude>**/*.java</exclude>
+          <exclude>com/sun/tools/javac/launcher/**</exclude>
+          <exclude>com/sun/tools/javac/sym/**</exclude>
+          <exclude>com/sun/tools/sjavac/**</exclude>
+          <exclude>sun/**</exclude>
+        </excludes>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <!-- tools used by the Ant build; they are copied to its tools.dir -->
@@ -88,7 +131,7 @@
             <artifactItem>
               <groupId>org.frgaal</groupId>
               <artifactId>compiler</artifactId>
-              <version>24.0.0</version>
+              <version>25.0.0</version>
               <destFileName>compiler.jar</destFileName>
             </artifactItem>
             <artifactItem>
@@ -127,10 +170,48 @@
               <goal>copy</goal>
             </goals>
           </execution>
+          <execution>
+            <!-- classes which are not compiled from the JDK sources, see also the provided dependency -->
+            <id>unpack-reflect</id>
+            <phase>initialize</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${nbjavac.tools.dir}/reflect</outputDirectory>
+              <includes>nbjavac/sun/annotation/**,com/sun/tools/classfile/**,com/sun/tools/javap/**</includes>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>com.dukescript.nbjavac</groupId>
+                  <artifactId>nb-javac</artifactId>
+                  <version>jdk-21u</version>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+          <execution>
+            <!-- platform data used by nb-javac running on JDK 8; the Ant build puts it into the impl jar -->
+            <id>unpack-ct-sym</id>
+            <phase>process-test-resources</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/ct-sym</outputDirectory>
+              <includes>META-INF/ct*/**</includes>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.frgaal</groupId>
+                  <artifactId>compiler</artifactId>
+                  <version>25.0.0</version>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
       <plugin>
-        <!-- Declares the remaining main source roots for IDEs; compilation itself is done by the Ant build -->
+        <!-- Declares the remaining main source roots, the generated ones are produced by the generate-sources phase -->
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
         <version>3.6.0</version>
@@ -145,7 +226,7 @@
               <sources>
                 <source>${project.basedir}/src/java.compiler/share/classes</source>
                 <source>${project.basedir}/src/jdk.compiler/share/classes</source>
-                <source>${project.basedir}/src/jdk.jdeps/share/classes</source>
+                <source>${project.basedir}/src/java.base/share/classes</source>
               </sources>
             </configuration>
           </execution>
@@ -203,6 +284,93 @@
         </executions>
       </plugin>
       <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.3.1</version>
+        <executions>
+          <execution>
+            <id>resources</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>resources</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>test-resources</id>
+            <phase>process-test-resources</phase>
+            <goals>
+              <goal>testResources</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <!-- frgaal: compiles the modern JDK sources into Java 8 bytecode -->
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
+        <dependencies>
+          <dependency>
+            <groupId>org.frgaal</groupId>
+            <artifactId>compiler-maven-plugin</artifactId>
+            <version>25.0.0</version>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <compilerId>frgaal</compilerId>
+          <source>24</source>
+          <target>1.8</target>
+          <encoding>UTF-8</encoding>
+          <debug>true</debug>
+          <createMissingPackageInfoClass>false</createMissingPackageInfoClass>
+          <compilerArgs>
+            <arg>--limit-modules</arg>
+            <arg>java.base</arg>
+          </compilerArgs>
+          <excludes>
+            <exclude>**/module-info.java</exclude>
+            <exclude>com/sun/tools/javac/launcher/**</exclude>
+            <exclude>com/sun/tools/javac/main/JavacToolProvider.java</exclude>
+            <exclude>com/sun/tools/sjavac/**</exclude>
+          </excludes>
+        </configuration>
+        <executions>
+          <execution>
+            <id>compile</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>test-compile</id>
+            <phase>test-compile</phase>
+            <goals>
+              <goal>testCompile</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.5.3</version>
+        <configuration>
+          <!-- like the former Ant junit task: a new JVM per test class -->
+          <reuseForks>false</reuseForks>
+          <!-- the same classes as the former Ant junit run -->
+          <includes>
+            <include>**/*Test.java</include>
+          </includes>
+        </configuration>
+        <executions>
+          <execution>
+            <id>test</id>
+            <phase>test</phase>
+            <goals>
+              <goal>test</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-antrun-plugin</artifactId>
         <version>3.1.0</version>
@@ -216,17 +384,6 @@
           <dependency>
             <groupId>org.apache.ant</groupId>
             <artifactId>ant-launcher</artifactId>
-            <version>1.10.15</version>
-          </dependency>
-          <!-- optional Ant tasks needed by the "test" target -->
-          <dependency>
-            <groupId>org.apache.ant</groupId>
-            <artifactId>ant-junit</artifactId>
-            <version>1.10.15</version>
-          </dependency>
-          <dependency>
-            <groupId>org.apache.ant</groupId>
-            <artifactId>ant-junit4</artifactId>
             <version>1.10.15</version>
           </dependency>
         </dependencies>
@@ -277,31 +434,6 @@
             </configuration>
           </execution>
           <execution>
-            <id>compile</id>
-            <phase>compile</phase>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <configuration>
-              <target>
-                <ant target="compile"/>
-              </target>
-            </configuration>
-          </execution>
-          <execution>
-            <id>test</id>
-            <phase>test</phase>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <configuration>
-                <skip>${skipTests}</skip>
-              <target>
-                <ant target="test"/>
-              </target>
-            </configuration>
-          </execution>
-          <execution>
             <id>jar</id>
             <phase>package</phase>
             <goals>
@@ -330,7 +462,28 @@
     </plugins>
   </build>
   <profiles>
-    <!-- both need -Dmaven.groupId=your.grp.id -->
+    <profile>
+      <!-- on JDK 8 the nb-javac classes have to precede the JDK's own javax.tools etc. -->
+      <id>jdk8-tests</id>
+      <activation>
+        <jdk>1.8</jdk>
+      </activation>
+      <properties>
+        <argLine>-Xbootclasspath/p:${project.build.outputDirectory}:${nbjavac.tools.dir}/reflect:${project.build.directory}/ct-sym</argLine>
+      </properties>
+    </profile>
+    <profile>
+      <!-- hide the JDK's own jdk.compiler (and java.compiler), the tested nb-javac is on the classpath instead -->
+      <id>jdk9-tests</id>
+      <activation>
+        <jdk>[9,)</jdk>
+      </activation>
+      <properties>
+        <!-- java.management is needed by the surefire booter itself -->
+        <argLine>-Ddebug=false --limit-modules java.base,java.xml,jdk.zipfs,java.management</argLine>
+      </properties>
+    </profile>
+    <!-- both publishing profiles need -Dmaven.groupId=your.grp.id -->
     <profile>
       <id>ossrh-snapshots</id>
       <build>
