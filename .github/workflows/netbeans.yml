@@ -67,7 +67,7 @@ jobs:
             git checkout ${{ matrix.tag }}
 
       - name: Build NetBeans with latest nb-javac
-        run: JAVA_HOME=`cat jdk-${{ matrix.tag }}` ant -f netbeans build -Dnbjavac.class.path=`pwd`/make/langtools/netbeans/nb-javac/dist/nb-javac-*.jar
+        run: JAVA_HOME=`cat jdk-${{ matrix.tag }}` ant -f netbeans build -Dnbjavac.class.path=`pwd`/target/nb-javac-*.jar
 
       - name: Setup Xvfb
         run: |
@@ -75,4 +75,4 @@ jobs:
           Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
 
       - name: Test with Commit Validation
-        run: JAVA_HOME=`cat jdk-${{ matrix.tag }}` ant -f netbeans commit-validation -Dnbjavac.class.path=`pwd`/make/langtools/netbeans/nb-javac/dist/nb-javac-*.jar
+        run: JAVA_HOME=`cat jdk-${{ matrix.tag }}` ant -f netbeans commit-validation -Dnbjavac.class.path=`pwd`/target/nb-javac-*.jar

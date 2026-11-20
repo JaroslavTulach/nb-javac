@@ -23,9 +23,9 @@ the standard Maven lifecycle phases:
 | ----- | ------------ |
 | `initialize` | checks the OpenJDK sources out into `jdk` (see below) |
 | `generate-sources` | applies the automatic refactorings to the sources (see below) |
-| `compile` | compiles the sources with the [Frgaal](https://frgaal.org) compiler into Java 8 bytecode |
+| `compile` | compiles the sources with the [Frgaal](https://frgaal.org) compiler into Java 8 bytecode (and the `SourceVersion` for Java 11) |
 | `test` | compiles and runs the tests with `surefire` (skip with `-DskipTests`, run one with `-Dtest=StringWrapperTest`) |
-| `package` | creates the `api` and `impl` jars and the sources zip |
+| `package` | creates the `api` and implementation jars and the sources zip |
 | `deploy` | publishes the artifacts (see the profiles in [pom.xml](pom.xml) and the [README](README.md)) |
 
 Any `-Dkey=value` given to `mvn` is passed to the build. Read below to control individual steps of the build.
@@ -97,8 +97,8 @@ generate the final JAR files:
 $ JAVA_HOME=/jdk-25/ mvn clean package -DskipTests
 ```
 
-JARs `nb-javac-*-api.jar` and `nb-javac-*-impl.jar` are going to appear
-at location `./make/langtools/netbeans/nb-javac/dist/`.
+JARs `nb-javac-*.jar` (the implementation) and `nb-javac-*-api.jar` are going to appear
+in the `./target/` directory.
 
 ### Debug & Develop
 

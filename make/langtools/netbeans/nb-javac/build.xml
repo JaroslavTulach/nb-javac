@@ -1,26 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-    Helper script called from the root pom.xml. It prepares the sources and
-    assembles the jars. The classes are compiled and the tests are run
-    by Maven. Do not call this script directly, use `mvn`.
+    Helper script called from the root pom.xml. It prepares the sources
+    and creates the sources zip. The classes are compiled, tested and
+    packaged by Maven. Do not call this script directly, use `mvn`.
 -->
-<project name="nb-javac" default="jar" basedir=".">
-    <description>Prepares sources and assembles jars of nb-javac.</description>
+<project name="nb-javac" default="generate-files" basedir=".">
+    <description>Prepares sources of nb-javac.</description>
 
-    <!-- jdk.git.url, jdk.git.commit, build.classes.dir, nbjavac.reflect.dir and nbjavac.ctsym.dir are defined by pom.xml -->
+    <!-- jdk.git.url, jdk.git.commit and dist.dir are defined by pom.xml -->
     <property name="nb-javac-ver" value="${jdk.git.commit}"/>
 
     <property name="root" location="../../../.."/>
     <property name="jdk.repo" location="${root}/jdk"/>
     <property name="src.dir" location="${root}/src"/>
     <property name="tools.dir" location="${root}/lib"/>
-    <property name="build.dir" location="build"/>
-    <property name="dist.dir" location="dist"/>
-    <property name="nbbuild.ext.dir" location="${root}/../nbbuild/netbeans/java/modules/ext"/>
 
     <target name="-check-properties">
         <fail unless="jdk.git.url" message="Property jdk.git.url is not defined. Build with Maven (mvn) or specify -Djdk.git.url=..."/>
         <fail unless="jdk.git.commit" message="Property jdk.git.commit is not defined. Build with Maven (mvn) or specify -Djdk.git.commit=..."/>
+        <fail unless="dist.dir" message="Property dist.dir is not defined. Build with Maven (mvn)."/>
         <fail message="Build tools are missing in ${tools.dir}. They are downloaded by Maven, run 'mvn initialize'.">
             <condition>
                 <not>
@@ -52,9 +50,7 @@
 
     <target name="init" depends="-check-properties,-checkout-jdk" description="Checks the OpenJDK sources out."/>
 
-    <target name="clean" description="Deletes the build products, including the sources processed by jackpot.">
-        <delete dir="${build.dir}"/>
-        <delete dir="${dist.dir}"/>
+    <target name="clean" description="Deletes the sources processed by jackpot.">
         <delete dir="${src.dir}"/>
     </target>
 
@@ -143,117 +139,6 @@
         <echo file="${src.dir}/jackpot-done">Jackpot done!</echo>
     </target>
 
-    <target name="-check-classes" depends="init">
-        <fail unless="build.classes.dir" message="Property build.classes.dir is not defined. Build with Maven (mvn)."/>
-        <fail unless="nbjavac.reflect.dir" message="Property nbjavac.reflect.dir is not defined. Build with Maven (mvn)."/>
-        <fail unless="nbjavac.ctsym.dir" message="Property nbjavac.ctsym.dir is not defined. Build with Maven (mvn)."/>
-        <fail message="Classes are not compiled in ${build.classes.dir}, run 'mvn compile'.">
-            <condition>
-                <not>
-                    <available file="${build.classes.dir}/javax/lang/model/SourceVersion.class"/>
-                </not>
-            </condition>
-        </fail>
-    </target>
-
-    <target name="-separate-jars" depends="-check-classes">
-        <copy  file="${build.classes.dir}/javax/lang/model/SourceVersion.class"
-               tofile="${build.classes.dir}/META-INF/versions/11/javax/lang/model/SourceVersion.class"
-               encoding="ISO-8859-1"
-               outputencoding="ISO-8859-1"
-        >
-            <filterchain>
-                 <replacestring from="nbjavac/RuntimeWR$Version" to="java/lang/Runtime$Version"/>
-            </filterchain>
-        </copy>
-        <jar destfile="${dist.dir}/nb-javac-${nb-javac-ver}-api.jar">
-            <manifest>
-                <attribute name="Multi-Release" value="true"/>
-            </manifest>
-            <fileset dir="${build.classes.dir}">
-                <include name="com/sun/source/**/*"/>
-                <include name="javax/lang/**/*"/>
-                <include name="javax/tools/*"/>
-                <include name="jdk/internal/PreviewFeature*"/>
-                <include name="javax/annotation/**/*"/>
-                <include name="META-INF/versions/**"/>
-            </fileset>
-            <fileset dir="${root}">
-                <include name="README.md"/>
-                <include name="LICENSE.tx"/>
-                <include name="SECURITY.md"/>
-            </fileset>
-        </jar>
-        <jar destfile="${dist.dir}/nb-javac-${nb-javac-ver}-impl.jar">
-            <fileset dir="${build.classes.dir}">
-                <include name="META-INF/services/**"/>
-                <include name="com/sun/tools/**/*"/>
-                <include name="jdk/internal/shellsupport/**/*"/>
-                <include name="jdk/internal/PreviewFeature*"/>
-                <include name="nbjavac/**"/>
-            </fileset>
-            <fileset dir="${nbjavac.ctsym.dir}" includes="META-INF/ct*/**"/>
-            <fileset dir="${root}">
-                <include name="README.md"/>
-                <include name="LICENSE.tx"/>
-                <include name="SECURITY.md"/>
-            </fileset>
-            <fileset dir="${nbjavac.reflect.dir}" />
-        </jar>
-    </target>
-
-    <available file="${java.home}/bin/javap" property="javap.exe" value="${java.home}/bin/javap"/>
-    <available file="${java.home}/bin/javap.exe" property="javap.exe" value="${java.home}/bin/javap.exe"/>
-    <target name="-verify-source-version-classes" depends="-separate-jars" if="javap.exe">
-        <exec executable="${javap.exe}" failonerror="true" outputproperty="javap.SourceVersion.old">
-            <arg value="-bootclasspath"></arg>
-            <arg value="ignore"></arg>
-            <arg value="--system"></arg>
-            <arg value="none"></arg>
-            <arg value="-cp"></arg>
-            <arg value="${dist.dir}/nb-javac-${nb-javac-ver}-api.jar"></arg>
-            <arg value="javax.lang.model.SourceVersion"/>
-        </exec>
-        <exec executable="${javap.exe}" failonerror="true" outputproperty="javap.SourceVersion.new">
-            <arg value="-bootclasspath"></arg>
-            <arg value="ignore"></arg>
-            <arg value="--system"></arg>
-            <arg value="none"></arg>
-            <arg value="--multi-release"></arg>
-            <arg value="17"></arg>
-            <arg value="-cp"></arg>
-            <arg value="${dist.dir}/nb-javac-${nb-javac-ver}-api.jar"></arg>
-            <arg value="javax.lang.model.SourceVersion"/>
-        </exec>
-        <fail message="Patched version of SourceVersion should be different!">
-            <condition>
-                <equals arg1="${javap.SourceVersion.old}" arg2="${javap.SourceVersion.new}"/>
-            </condition>
-        </fail>
-        <fail message="Patched version of SourceVersion shall contain Runtime.Version: ${javap.SourceVersion.new}">
-            <condition>
-                <not>
-                    <contains string="${javap.SourceVersion.new}" substring="java.lang.Runtime$Version"/>
-                </not>
-            </condition>
-        </fail>
-        <echo message="JDK8 and JDK11 versions of javax.lang.model.SourceVersion verified successfully"/>
-    </target>
-
-    <!-- when built next to the NetBeans sources, update the jars there -->
-    <target name="-copy-jars-to-nbbuild">
-        <available file="${nbbuild.ext.dir}" type="dir" property="nbbuild.ext.exists"/>
-        <antcall target="-do-copy-jars-to-nbbuild"/>
-    </target>
-    <target name="-do-copy-jars-to-nbbuild" if="nbbuild.ext.exists">
-        <copy file="${dist.dir}/nb-javac-${nb-javac-ver}-api.jar" tofile="${nbbuild.ext.dir}/nb-javac-api.jar" />
-        <copy file="${dist.dir}/nb-javac-${nb-javac-ver}-impl.jar" tofile="${nbbuild.ext.dir}/nb-javac-impl.jar" />
-        <touch file="${nbbuild.ext.dir}/../.lastModified" />
-    </target>
-
-    <target name="jar" depends="-verify-source-version-classes,-copy-jars-to-nbbuild"
-            description="Creates the api and impl jars from the classes compiled by Maven."/>
-
     <target name="zip-nb-javac-sources" depends="init">
         <zip basedir="${root}" destfile="${dist.dir}/nb-javac-${nb-javac-ver}-sources.zip">
             <exclude name="**/build/"/>
@@ -297,14 +182,15 @@
     <property name="maven-staging-repository-id" value="oss.sonatype.org" />
     <property name="maven-staging-repository-url" value="https://oss.sonatype.org/service/local/staging/deploy/maven2/" />
 
-    <target name="-prepare-maven-version" depends="jar">
+    <target name="-prepare-maven-version" depends="init">
         <property name="maven.version" value="${nb-javac-ver}"/>
     </target>
-    <target name="-prepare-maven-snapshot-version" depends="jar">
+    <target name="-prepare-maven-snapshot-version" depends="init">
         <property name="maven.version" value="${nb-javac-ver}-SNAPSHOT"/>
     </target>
 
-    <target name="-prepare-maven" depends="jar,zip-nb-javac-sources">
+    <!-- the jars are created by Maven in the package phase -->
+    <target name="-prepare-maven" depends="zip-nb-javac-sources">
         <fail message="Version must be specified!" unless="maven.version"></fail>
         <fail message="Specify -Dmaven.groupId=..." unless="maven.groupId"></fail>
         <property name="mvn.exec" value="mvn"/>
@@ -317,27 +203,27 @@
             <include name="CONTRIBUTING.md"/>
         </zip>
 
-        <copy file="pom-nb-javac.xml" todir="${build.dir}" />
+        <copy file="pom-nb-javac.xml" todir="${dist.dir}" />
 
         <replaceregexp match="(&lt;version&gt;).*(&lt;/version&gt;)"
                        replace="\1${maven.version}\2"
-                       file="${build.dir}/pom-nb-javac.xml"/>
+                       file="${dist.dir}/pom-nb-javac.xml"/>
 
         <replaceregexp match="(&lt;groupId&gt;).*(&lt;/groupId&gt;)"
                        replace="\1${maven.groupId}\2"
-                       file="${build.dir}/pom-nb-javac.xml"/>
+                       file="${dist.dir}/pom-nb-javac.xml"/>
     </target>
 
     <target name="publish-to-ossrh-snapshots"
             description="Publish nb-javac to Snapshot Repository of OSSRH"
             depends="-prepare-maven-snapshot-version,-prepare-maven">
-        <property name="mvn.exec.output" location="${build.dir}/maven-publish.log"/>
+        <property name="mvn.exec.output" location="${dist.dir}/maven-publish.log"/>
         <exec executable="${mvn.exec}" output="${mvn.exec.output}" resultproperty="mvn.exec.result" failonerror="false">
             <arg value="org.apache.maven.plugins:maven-deploy-plugin:2.7:deploy-file"/>
             <arg value="-Durl=${maven-snapshots-repository-url}"/>
             <arg value="-DrepositoryId=${maven-snapshots-repository-id}"/>
-            <arg value="-DpomFile=${build.dir}/pom-nb-javac.xml"/>
-            <arg value="-Dfile=${dist.dir}/nb-javac-${nb-javac-ver}-impl.jar"/>
+            <arg value="-DpomFile=${dist.dir}/pom-nb-javac.xml"/>
+            <arg value="-Dfile=${dist.dir}/nb-javac-${nb-javac-ver}.jar"/>
             <arg value="-Dfiles=${dist.dir}/nb-javac-${nb-javac-ver}-api.jar,${dist.dir}/nb-javac-${nb-javac-ver}-sources.zip,${dist.dir}/nb-javac-${nb-javac-ver}-doc.zip"/>
             <arg value="-Dtypes=jar,jar,jar" />
             <arg value="-Dclassifiers=api,sources,javadoc" />
@@ -357,12 +243,12 @@
             description="Stage nb-javac for maven central"
             depends="-prepare-maven-version,-prepare-maven">
 
-        <exec executable="${mvn.exec}" output="${build.dir}/maven-publish.log" failonerror="true">
+        <exec executable="${mvn.exec}" output="${dist.dir}/maven-publish.log" failonerror="true">
             <arg value="org.apache.maven.plugins:maven-gpg-plugin:1.4:sign-and-deploy-file"/>
             <arg value="-Durl=${maven-staging-repository-url}"/>
             <arg value="-DrepositoryId=${maven-staging-repository-id}"/>
-            <arg value="-DpomFile=${build.dir}/pom-nb-javac.xml"/>
-            <arg value="-Dfile=${dist.dir}/nb-javac-${nb-javac-ver}-impl.jar"/>
+            <arg value="-DpomFile=${dist.dir}/pom-nb-javac.xml"/>
+            <arg value="-Dfile=${dist.dir}/nb-javac-${nb-javac-ver}.jar"/>
             <arg value="-Dfiles=${dist.dir}/nb-javac-${nb-javac-ver}-api.jar,${dist.dir}/nb-javac-${nb-javac-ver}-sources.zip,${dist.dir}/nb-javac-${nb-javac-ver}-doc.zip"/>
             <arg value="-Dtypes=jar,jar,jar" />
             <arg value="-Dclassifiers=api,sources,javadoc" />

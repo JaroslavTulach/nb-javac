@@ -7,8 +7,8 @@
   <groupId>com.dukescript.nbjavac</groupId>
   <artifactId>nb-javac</artifactId>
   <version>${revision}</version>
-  <!-- The jars are built by the Ant build and attached to the project in the package phase -->
-  <packaging>pom</packaging>
+  <!-- The jars are created by the standard lifecycle, the sources zip is attached in the verify phase -->
+  <packaging>jar</packaging>
 
   <name>nb-javac</name>
   <description>
@@ -55,11 +55,9 @@
     <!-- artifacts are published by the Ant targets from the profiles below -->
     <maven.deploy.skip>true</maven.deploy.skip>
     <nbjavac.tools.dir>${project.basedir}/lib</nbjavac.tools.dir>
-    <nbjavac.reflect.dir>${project.build.directory}/reflect</nbjavac.reflect.dir>
-    <nbjavac.ctsym.dir>${project.build.directory}/ct-sym</nbjavac.ctsym.dir>
     <nbjavac.ant.dir>${project.basedir}/make/langtools/netbeans/nb-javac</nbjavac.ant.dir>
-    <!-- inherited by Ant: the classes are compiled by Maven, Ant only assembles the jars from them -->
-    <build.classes.dir>${project.build.outputDirectory}</build.classes.dir>
+    <!-- inherited by Ant: where it creates the sources zip and prepares the publishing -->
+    <dist.dir>${project.build.directory}</dist.dir>
   </properties>
 
   <dependencies>
@@ -91,6 +89,14 @@
       </testResource>
     </testResources>
     <resources>
+      <resource>
+        <!-- packaged into the jars -->
+        <directory>${project.basedir}</directory>
+        <includes>
+          <include>README.md</include>
+          <include>SECURITY.md</include>
+        </includes>
+      </resource>
       <resource>
         <directory>${project.basedir}/make/langtools/netbeans/nb-javac/src</directory>
         <excludes>
@@ -147,7 +153,7 @@
               <goal>unpack</goal>
             </goals>
             <configuration>
-              <outputDirectory>${nbjavac.reflect.dir}</outputDirectory>
+              <outputDirectory>${project.build.outputDirectory}</outputDirectory>
               <includes>nbjavac/sun/annotation/**,com/sun/tools/classfile/**,com/sun/tools/javap/**</includes>
               <artifactItems>
                 <artifactItem>
@@ -159,14 +165,14 @@
             </configuration>
           </execution>
           <execution>
-            <!-- platform data used by nb-javac running on JDK 8, it is also put into the impl jar -->
+            <!-- platform data used by nb-javac running on JDK 8, packaged into the impl jar -->
             <id>unpack-ct-sym</id>
             <phase>initialize</phase>
             <goals>
               <goal>unpack</goal>
             </goals>
             <configuration>
-              <outputDirectory>${nbjavac.ctsym.dir}</outputDirectory>
+              <outputDirectory>${project.build.outputDirectory}</outputDirectory>
               <includes>META-INF/ct*/**</includes>
               <artifactItems>
                 <artifactItem>
@@ -200,24 +206,15 @@
             </configuration>
           </execution>
           <execution>
-            <id>attach-artifacts</id>
-            <phase>package</phase>
+            <id>attach-sources-zip</id>
+            <phase>verify</phase>
             <goals>
               <goal>attach-artifact</goal>
             </goals>
             <configuration>
               <artifacts>
                 <artifact>
-                  <file>${nbjavac.ant.dir}/dist/nb-javac-${jdk.git.commit}-impl.jar</file>
-                  <type>jar</type>
-                </artifact>
-                <artifact>
-                  <file>${nbjavac.ant.dir}/dist/nb-javac-${jdk.git.commit}-api.jar</file>
-                  <type>jar</type>
-                  <classifier>api</classifier>
-                </artifact>
-                <artifact>
-                  <file>${nbjavac.ant.dir}/dist/nb-javac-${jdk.git.commit}-sources.zip</file>
+                  <file>${project.build.directory}/nb-javac-${jdk.git.commit}-sources.zip</file>
                   <type>jar</type>
                   <classifier>sources</classifier>
                 </artifact>
@@ -257,18 +254,23 @@
         <version>3.3.1</version>
         <executions>
           <execution>
-            <id>resources</id>
+            <!-- only this file of the original sources, so that the other classes are taken from the classpath -->
+            <id>copy-sourceversion-java11</id>
             <phase>process-resources</phase>
             <goals>
-              <goal>resources</goal>
+              <goal>copy-resources</goal>
             </goals>
-          </execution>
-          <execution>
-            <id>test-resources</id>
-            <phase>process-test-resources</phase>
-            <goals>
-              <goal>testResources</goal>
-            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/sourceversion-java11/javax/lang/model</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${project.basedir}/jdk/src/java.compiler/share/classes/javax/lang/model</directory>
+                  <includes>
+                    <include>SourceVersion.java</include>
+                  </includes>
+                </resource>
+              </resources>
+            </configuration>
           </execution>
         </executions>
       </plugin>
@@ -303,18 +305,23 @@
         </configuration>
         <executions>
           <execution>
-            <id>compile</id>
+            <!-- the original SourceVersion uses Runtime.Version, the Java 8 variant (default-compile) cannot -->
+            <id>compile-sourceversion-java11</id>
             <phase>compile</phase>
             <goals>
               <goal>compile</goal>
             </goals>
-          </execution>
-          <execution>
-            <id>test-compile</id>
-            <phase>test-compile</phase>
-            <goals>
-              <goal>testCompile</goal>
-            </goals>
+            <configuration>
+              <compileSourceRoots>
+                <compileSourceRoot>${project.build.directory}/sourceversion-java11</compileSourceRoot>
+              </compileSourceRoots>
+              <includes>
+                <include>javax/lang/model/SourceVersion.java</include>
+              </includes>
+              <target>11</target>
+              <useIncrementalCompilation>false</useIncrementalCompilation>
+              <outputDirectory>${project.build.outputDirectory}/META-INF/versions/11</outputDirectory>
+            </configuration>
           </execution>
         </executions>
       </plugin>
@@ -329,13 +336,60 @@
             <include>**/*Test.java</include>
           </includes>
         </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.4.2</version>
+        <configuration>
+          <archive>
+            <addMavenDescriptor>false</addMavenDescriptor>
+          </archive>
+        </configuration>
         <executions>
           <execution>
-            <id>test</id>
-            <phase>test</phase>
+            <!-- the implementation jar is the main artifact -->
+            <id>default-jar</id>
+            <configuration>
+              <includes>
+                <include>META-INF/services/**</include>
+                <include>META-INF/ct*/**</include>
+                <include>com/sun/tools/**</include>
+                <include>jdk/internal/shellsupport/**</include>
+                <include>jdk/internal/PreviewFeature*</include>
+                <include>nbjavac/**</include>
+                <include>README.md</include>
+                <include>SECURITY.md</include>
+              </includes>
+            </configuration>
+          </execution>
+          <execution>
+            <id>api-jar</id>
+            <phase>package</phase>
             <goals>
-              <goal>test</goal>
+              <goal>jar</goal>
             </goals>
+            <configuration>
+              <classifier>api</classifier>
+              <archive>
+                <manifestEntries>
+                  <Multi-Release>true</Multi-Release>
+                </manifestEntries>
+              </archive>
+              <includes>
+                <include>com/sun/source/**</include>
+                <include>javax/lang/**</include>
+                <include>javax/tools/*</include>
+                <include>jdk/internal/PreviewFeature*</include>
+                <include>javax/annotation/**</include>
+                <include>META-INF/versions/**</include>
+                <include>README.md</include>
+                <include>SECURITY.md</include>
+              </includes>
+              <excludes>
+                <!-- written by the compiler plugin -->
+                <exclude>META-INF/versions/*/META-INF/**</exclude>
+              </excludes>
+            </configuration>
           </execution>
         </executions>
       </plugin>
@@ -403,18 +457,6 @@
             </configuration>
           </execution>
           <execution>
-            <id>jar</id>
-            <phase>package</phase>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <configuration>
-              <target>
-                <ant target="jar"/>
-              </target>
-            </configuration>
-          </execution>
-          <execution>
             <id>sources-zip</id>
             <phase>package</phase>
             <goals>
@@ -438,7 +480,7 @@
         <jdk>1.8</jdk>
       </activation>
       <properties>
-        <argLine>-Xbootclasspath/p:${project.build.outputDirectory}:${nbjavac.reflect.dir}:${nbjavac.ctsym.dir}</argLine>
+        <argLine>-Xbootclasspath/p:${project.build.outputDirectory}</argLine>
       </properties>
     </profile>
     <profile>

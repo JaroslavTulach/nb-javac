@@ -37,8 +37,8 @@ $ git checkout <release_tag_name>
 $ JAVA_HOME=/jdk-25/ mvn clean package -DskipTests
 ```
 
-Two jars namely `nb-javac-*-api.jar` and `nb-javac-*-impl.jar` are going to appear
-at location `./make/langtools/netbeans/nb-javac/dist/`. It is also possible to
+Two jars namely `nb-javac-*-api.jar` and `nb-javac-*.jar` (the implementation)
+are going to appear in the `./target/` directory. It is also possible to
 sanity test the generated Javac on JDK8:
 ```bash
 $ JAVA_HOME=/jdk-8/ mvn test
@@ -46,7 +46,7 @@ $ JAVA_HOME=/jdk-8/ mvn test
 
 ### Generate ZIP with the source code of nb-javac
 
-The ZIP is created in `./make/langtools/netbeans/nb-javac/dist/` by the `package` phase:
+The ZIP is created in the `./target/` directory by the `package` phase:
 
 ```bash
 $ JAVA_HOME=/jdk-25/ mvn package -DskipTests
@@ -78,15 +78,15 @@ $ JAVA_HOME=/jdk-25/ mvn package -DskipTests
 #### 1. Copy jars by following commands
 
 ```bash
-cp nb-javac/make/langtools/netbeans/nb-javac/dist/nb-javac-$ver-api.jar netbeans/java/libs.javacapi/external/nb-javac-$ver-api.jar
-cp nb-javac/make/langtools/netbeans/nb-javac/dist/nb-javac-$ver-impl.jar netbeans/java/libs.javacimpl/external/nb-javac-$ver-impl.jar
+cp nb-javac/target/nb-javac-$ver-api.jar netbeans/java/libs.javacapi/external/nb-javac-$ver-api.jar
+cp nb-javac/target/nb-javac-$ver.jar netbeans/java/libs.javacimpl/external/nb-javac-$ver-impl.jar
 ```
 
 #### 2. Open Netbeans and activate Java SE by creating or opening a ant, maven or gradle then copy jars by these commands
 
 ```bash
-cp nb-javac/make/langtools/netbeans/nb-javac/dist/nb-javac-$ver-impl.jar netbeans/nbbuild/testuserdir/modules/ext/nb-javac-$ver-impl.jar
-cp nb-javac/make/langtools/netbeans/nb-javac/dist/nb-javac-$ver-api.jar netbeans/nbbuild/testuserdir/modules/ext/nb-javac-$ver-api.jar
+cp nb-javac/target/nb-javac-$ver.jar netbeans/nbbuild/testuserdir/modules/ext/nb-javac-$ver-impl.jar
+cp nb-javac/target/nb-javac-$ver-api.jar netbeans/nbbuild/testuserdir/modules/ext/nb-javac-$ver-api.jar
 touch netbeans/nbbuild/testuserdir/.lastmodified
 ```
 
