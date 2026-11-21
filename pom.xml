@@ -79,16 +79,6 @@
 
   <build>
     <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
-    <testSourceDirectory>${project.basedir}/make/langtools/netbeans/nb-javac/test</testSourceDirectory>
-    <testResources>
-      <!-- prebuilt class files used as test data -->
-      <testResource>
-        <directory>${project.basedir}/make/langtools/netbeans/nb-javac/test</directory>
-        <includes>
-          <include>**/*.class</include>
-        </includes>
-      </testResource>
-    </testResources>
     <resources>
       <resource>
         <!-- packaged into the jars -->
@@ -389,6 +379,8 @@
               <classesDirectory>${project.basedir}</classesDirectory>
               <includes>
                 <include>src/main/java/**</include>
+                <include>src/test/java/**</include>
+                <include>src/test/resources/**</include>
                 <include>src/generated/java/java.base/**</include>
                 <include>src/generated/java/jdk.compiler/**</include>
                 <include>src/generated/java/java.compiler/**</include>

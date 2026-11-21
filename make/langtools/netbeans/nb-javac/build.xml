@@ -120,7 +120,7 @@
                 </fileset>
             </path>
         </pathconvert>
-        <copy file="${root}/target/nb-javac-${revision}.jar"
+        <copy file="${root}/target/${nbjavac.implementation.finalName}.jar"
               tofile="${netbeans.impl.jar}" overwrite="true"/>
         <copy file="${root}/target/nb-javac-${revision}-api.jar"
               tofile="${netbeans.api.jar}" overwrite="true"/>
