@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-    Helper script called from the root pom.xml. It prepares the sources.
+    Helper script called from the root pom.xml. It prepares the sources and
+    can install the built jars into a NetBeans distribution.
     The classes are compiled, tested and packaged by Maven.
     Do not call this script directly, use `mvn`.
 -->
@@ -46,6 +47,61 @@
     </target>
 
     <target name="init" depends="-check-properties,-checkout-jdk" description="Checks the OpenJDK sources out."/>
+
+    <target name="install-netbeans" description="Installs the built jars into a NetBeans distribution.">
+        <fail unless="netbeans.dest.dir" message="Specify -Dnetbeans.dest.dir=/path/to/netbeans/nbbuild/netbeans"/>
+        <property name="netbeans.ext.dir" location="${netbeans.dest.dir}/java/modules/ext"/>
+        <available file="${netbeans.dest.dir}/java/modules/org-netbeans-libs-nbjavacapi.jar"
+                   type="file" property="netbeans.module.exists"/>
+        <fail unless="netbeans.module.exists"
+              message="No org-netbeans-libs-nbjavacapi.jar found under ${netbeans.dest.dir}/java/modules"/>
+        <available file="${netbeans.ext.dir}" type="dir" property="netbeans.ext.exists"/>
+        <fail unless="netbeans.ext.exists"
+              message="No Java module extension directory found at ${netbeans.ext.dir}"/>
+
+        <resourcecount property="netbeans.impl.count">
+            <fileset dir="${netbeans.ext.dir}">
+                <include name="nb-javac-jdk-*.jar"/>
+                <exclude name="*-api.jar"/>
+            </fileset>
+        </resourcecount>
+        <resourcecount property="netbeans.api.count">
+            <fileset dir="${netbeans.ext.dir}">
+                <include name="nb-javac-jdk-*-api.jar"/>
+            </fileset>
+        </resourcecount>
+        <condition property="netbeans.impl.unique">
+            <equals arg1="${netbeans.impl.count}" arg2="1"/>
+        </condition>
+        <condition property="netbeans.api.unique">
+            <equals arg1="${netbeans.api.count}" arg2="1"/>
+        </condition>
+        <fail unless="netbeans.impl.unique"
+              message="Expected exactly one nb-javac implementation JAR in ${netbeans.ext.dir}; found ${netbeans.impl.count}"/>
+        <fail unless="netbeans.api.unique"
+              message="Expected exactly one nb-javac API JAR in ${netbeans.ext.dir}; found ${netbeans.api.count}"/>
+
+        <pathconvert property="netbeans.impl.jar">
+            <path>
+                <fileset dir="${netbeans.ext.dir}">
+                    <include name="nb-javac-jdk-*.jar"/>
+                    <exclude name="*-api.jar"/>
+                </fileset>
+            </path>
+        </pathconvert>
+        <pathconvert property="netbeans.api.jar">
+            <path>
+                <fileset dir="${netbeans.ext.dir}">
+                    <include name="nb-javac-jdk-*-api.jar"/>
+                </fileset>
+            </path>
+        </pathconvert>
+        <copy file="${root}/target/nb-javac-${revision}.jar"
+              tofile="${netbeans.impl.jar}" overwrite="true"/>
+        <copy file="${root}/target/nb-javac-${revision}-api.jar"
+              tofile="${netbeans.api.jar}" overwrite="true"/>
+        <touch file="${netbeans.dest.dir}/java/.lastModified"/>
+    </target>
 
     <target name="-check-generated-files">
         <uptodate property="generated.files.up.to.date"

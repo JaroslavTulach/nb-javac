@@ -477,6 +477,35 @@
   </build>
   <profiles>
     <profile>
+      <id>install-netbeans</id>
+      <activation>
+        <property>
+          <name>netbeans.dest.dir</name>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>install-netbeans</id>
+                <phase>install</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <configuration>
+                  <target combine.self="override">
+                    <ant dir="${nbjavac.ant.dir}" target="install-netbeans" inheritAll="true"/>
+                  </target>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
       <!--
         mvn clean -Dclean.jdk=true
         also removes the checkout of the OpenJDK repository including any local changes in it.

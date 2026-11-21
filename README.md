@@ -91,22 +91,23 @@ uploads them with the [central-publishing-maven-plugin](https://central.sonatype
 To only create the bundle without uploading it (e.g. to upload it by other tools),
 add `-Dcentral.skipUpload=true`. The bundle is then in `target/central-publishing/central-bundle.zip`.
 
-# Installation/Usage
+# Install into a NetBeans distribution
 
-#### 1. Copy jars by following commands
-
-```bash
-cp nb-javac/target/nb-javac-$ver-api.jar netbeans/java/libs.javacapi/external/nb-javac-$ver-api.jar
-cp nb-javac/target/nb-javac-$ver.jar netbeans/java/libs.javacimpl/external/nb-javac-$ver-impl.jar
-```
-
-#### 2. Open Netbeans and activate Java SE by creating or opening a ant, maven or gradle then copy jars by these commands
+To build nb-javac and install its API and implementation jars into an existing
+NetBeans distribution, run this from the nb-javac checkout:
 
 ```bash
-cp nb-javac/target/nb-javac-$ver.jar netbeans/nbbuild/testuserdir/modules/ext/nb-javac-$ver-impl.jar
-cp nb-javac/target/nb-javac-$ver-api.jar netbeans/nbbuild/testuserdir/modules/ext/nb-javac-$ver-api.jar
-touch netbeans/nbbuild/testuserdir/.lastmodified
+JAVA_HOME=/jdk-25/ mvn install \
+    -Dnetbeans.dest.dir=/path/to/netbeans/nbbuild/netbeans
 ```
+
+Setting `netbeans.dest.dir` activates the install profile. It replaces the
+existing nb-javac jars in the distribution's `java/modules/ext` directory,
+preserving the filenames expected by its modules, then touches the Java
+cluster's `.lastModified` marker to invalidate NetBeans' caches. The build
+fails if the destination is not a NetBeans distribution with exactly one
+nb-javac API jar and one implementation jar. Restart NetBeans to load the
+updated jars.
 
 # Documentation 
 
