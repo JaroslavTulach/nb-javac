@@ -120,13 +120,20 @@
     </resources>
     <plugins>
       <plugin>
-        <!-- besides target, the sources processed by jackpot are removed; see the clean-jdk profile as well -->
+        <!-- Also remove generated sources and tools; see the clean-jdk profile as well. -->
         <artifactId>maven-clean-plugin</artifactId>
         <version>3.5.0</version>
         <configuration>
           <filesets>
             <fileset>
               <directory>${project.basedir}/src</directory>
+            </fileset>
+            <fileset>
+              <directory>${project.basedir}/lib</directory>
+              <includes>
+                <include>**/*.class</include>
+                <include>**/*.jar</include>
+              </includes>
             </fileset>
           </filesets>
         </configuration>
