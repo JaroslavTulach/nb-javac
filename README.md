@@ -1,4 +1,4 @@
-# Run Latest Java Compiler on old JDKs!
+# Run the Latest Java Compiler on old JDKs!
 
 _nb-javac_ is a backport of OpenJDK "javac", i.e., the Java compiler. _nbjavac_
 takes sources from the latest JDK and backports them to run on JDK8+.
@@ -11,7 +11,7 @@ JDKs!
   - Git
   - Apache Maven
   - JDK 25 to build
-  - JDK 8 to test
+  - older JDKs to test compatibility
 
 ## Building nb-javac jar files
 
@@ -31,26 +31,36 @@ $ git clone https://github.com/jaroslavtulach/nb-javac
 $ git checkout <release_tag_name> 
 ```
 
-### Run the below command to build nb-javac.
+### Build the nb-javac project
 
 ```bash
-$ JAVA_HOME=/jdk-25/ mvn clean package -DskipTests
+$ JAVA_HOME=/jdk-25/ mvn clean package
+```
+
+By default this project enables `jdk8+` compatibility profile. Such a profile guarantees the
+generated `nb-javac` can run on JDK8+, but in order to do so, it needs to apply more tweaks
+to the original OpenJDK sources. If you are not interested in such a level of portability,
+feel free to use `-Pjdk21+` profile to select only the
+refactorings needed for JDK 21 and later.
+
+The profiles share the Maven output directory. Run `mvn clean` when switching
+profiles so the next artifact cannot contain classes from the previous build.
+
+```bash
+$ JAVA_HOME=/jdk-25/ mvn clean package -Pjdk21+
 ```
 
 Two jars namely `nb-javac-*-api.jar` and `nb-javac-*.jar` (the implementation)
 are going to appear in the `./target/` directory. It is also possible to
-sanity test the generated Javac on JDK8:
+sanity test the generated Javac on JDK8 (in case of `jdk8+` profile being used):
 ```bash
-$ JAVA_HOME=/jdk-8/ mvn test
+$ JAVA_HOME=/jdk-8/ mvn surefire:test
 ```
+Additional `nb-javac-*-sources.jar` file with sources is created
+in the `./target/` directory by the `package` phase as well.
 
-### Generate JAR with the source code of nb-javac
-
-The `nb-javac-*-sources.jar` is created in the `./target/` directory by the `package` phase:
-
-```bash
-$ JAVA_HOME=/jdk-25/ mvn package -DskipTests
-```
+There is one shared API JAR and two implementation JARs: one for `jdk8+` and
+one for `jdk21+`.
 
 # Publishing to maven central
 
@@ -98,6 +108,7 @@ NetBeans distribution, run this from the nb-javac checkout:
 
 ```bash
 JAVA_HOME=/jdk-25/ mvn install \
+    -Pjdk21+ \
     -Dnetbeans.dest.dir=/path/to/netbeans/nbbuild/netbeans
 ```
 

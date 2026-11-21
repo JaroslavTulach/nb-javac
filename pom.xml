@@ -56,6 +56,9 @@
     <maven.deploy.skip>true</maven.deploy.skip>
     <nbjavac.tools.dir>${project.basedir}/lib</nbjavac.tools.dir>
     <nbjavac.ant.dir>${project.basedir}/make/langtools/netbeans/nb-javac</nbjavac.ant.dir>
+    <nbjavac.implementation.finalName>${project.build.finalName}</nbjavac.implementation.finalName>
+    <jackpot.profile>jdk8+</jackpot.profile>
+    <jackpot.hint.files>nbjavac-jdk21.hint,nbjavac.hint</jackpot.hint.files>
   </properties>
 
   <dependencies>
@@ -75,17 +78,7 @@
   </dependencies>
 
   <build>
-    <sourceDirectory>${project.basedir}/make/langtools/netbeans/nb-javac/src</sourceDirectory>
-    <testSourceDirectory>${project.basedir}/make/langtools/netbeans/nb-javac/test</testSourceDirectory>
-    <testResources>
-      <!-- prebuilt class files used as test data -->
-      <testResource>
-        <directory>${project.basedir}/make/langtools/netbeans/nb-javac/test</directory>
-        <includes>
-          <include>**/*.class</include>
-        </includes>
-      </testResource>
-    </testResources>
+    <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
     <resources>
       <resource>
         <!-- packaged into the jars -->
@@ -96,19 +89,16 @@
         </includes>
       </resource>
       <resource>
-        <directory>${project.basedir}/make/langtools/netbeans/nb-javac/src</directory>
+        <directory>${project.basedir}/src/main/resources</directory>
+      </resource>
+      <resource>
+        <directory>${project.basedir}/src/generated/java/java.compiler/share/classes</directory>
         <excludes>
           <exclude>**/*.java</exclude>
         </excludes>
       </resource>
       <resource>
-        <directory>${project.basedir}/src/java.compiler/share/classes</directory>
-        <excludes>
-          <exclude>**/*.java</exclude>
-        </excludes>
-      </resource>
-      <resource>
-        <directory>${project.basedir}/src/jdk.compiler/share/classes</directory>
+        <directory>${project.basedir}/src/generated/java/jdk.compiler/share/classes</directory>
         <excludes>
           <exclude>**/*.java</exclude>
           <exclude>com/sun/tools/javac/launcher/**</exclude>
@@ -126,7 +116,16 @@
         <configuration>
           <filesets>
             <fileset>
+              <directory>${project.basedir}/src/generated</directory>
+            </fileset>
+            <fileset>
               <directory>${project.basedir}/src</directory>
+              <includes>
+                <include>java.base/**</include>
+                <include>java.compiler/**</include>
+                <include>jdk.compiler/**</include>
+                <include>jackpot-done</include>
+              </includes>
             </fileset>
             <fileset>
               <directory>${project.basedir}/lib</directory>
@@ -216,9 +215,9 @@
             </goals>
             <configuration>
               <sources>
-                <source>${project.basedir}/src/java.compiler/share/classes</source>
-                <source>${project.basedir}/src/jdk.compiler/share/classes</source>
-                <source>${project.basedir}/src/java.base/share/classes</source>
+                <source>${project.basedir}/src/generated/java/java.compiler/share/classes</source>
+                <source>${project.basedir}/src/generated/java/jdk.compiler/share/classes</source>
+                <source>${project.basedir}/src/generated/java/java.base/share/classes</source>
               </sources>
             </configuration>
           </execution>
@@ -355,6 +354,7 @@
             <!-- the implementation jar is the main artifact -->
             <id>default-jar</id>
             <configuration>
+              <finalName>${nbjavac.implementation.finalName}</finalName>
               <includes>
                 <include>META-INF/services/**</include>
                 <include>META-INF/ct*/**</include>
@@ -378,9 +378,13 @@
               <classifier>sources</classifier>
               <classesDirectory>${project.basedir}</classesDirectory>
               <includes>
-                <include>src/java.base/**</include>
-                <include>src/jdk.compiler/**</include>
-                <include>src/java.compiler/**</include>
+                <include>src/main/java/**</include>
+                <include>src/test/java/**</include>
+                <include>src/test/resources/**</include>
+                <include>src/generated/java/java.base/**</include>
+                <include>src/generated/java/jdk.compiler/**</include>
+                <include>src/generated/java/java.compiler/**</include>
+                <include>src/main/resources/**</include>
                 <include>make/langtools/netbeans/nb-javac/**</include>
                 <include>make/langtools/tools/**</include>
                 <include>make/langtools/build.xml</include>
@@ -415,7 +419,11 @@
                 <include>javax/tools/*</include>
                 <include>jdk/internal/PreviewFeature*</include>
                 <include>javax/annotation/**</include>
-                <include>META-INF/versions/**</include>
+                <include>META-INF/versions/**/com/sun/source/**</include>
+                <include>META-INF/versions/**/javax/lang/**</include>
+                <include>META-INF/versions/**/javax/tools/*</include>
+                <include>META-INF/versions/**/jdk/internal/PreviewFeature*</include>
+                <include>META-INF/versions/**/javax/annotation/**</include>
                 <include>README.md</include>
                 <include>SECURITY.md</include>
               </includes>
@@ -424,6 +432,26 @@
                 <exclude>META-INF/versions/*/META-INF/**</exclude>
               </excludes>
             </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>3.5.3</version>
+        <configuration>
+          <systemPropertyVariables>
+            <nbjavac.api.jar>${project.build.directory}/${project.build.finalName}-api.jar</nbjavac.api.jar>
+            <nbjavac.implementation.jar>${project.build.directory}/${nbjavac.implementation.finalName}.jar</nbjavac.implementation.jar>
+            <nbjavac.profile>${jackpot.profile}</nbjavac.profile>
+          </systemPropertyVariables>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>
@@ -483,6 +511,61 @@
     </plugins>
   </build>
   <profiles>
+    <profile>
+      <id>jdk8+</id>
+      <properties>
+        <jackpot.profile>jdk8+</jackpot.profile>
+        <jackpot.hint.files>nbjavac-jdk21.hint,nbjavac.hint</jackpot.hint.files>
+      </properties>
+    </profile>
+    <profile>
+      <id>jdk21+</id>
+      <properties>
+        <jackpot.profile>jdk21+</jackpot.profile>
+        <jackpot.hint.files>nbjavac-jdk21.hint</jackpot.hint.files>
+        <nbjavac.implementation.finalName>${project.build.finalName}-jdk21</nbjavac.implementation.finalName>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-jar-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>default-jar</id>
+                <configuration>
+                  <excludes>
+                    <exclude>nbjavac/jdk8/**</exclude>
+                  </excludes>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+              <target>21</target>
+            </configuration>
+            <executions>
+              <execution>
+                <id>compile-sourceversion-java11</id>
+                <configuration>
+                  <skipMain>true</skipMain>
+                </configuration>
+              </execution>
+              <execution>
+                <id>default-testCompile</id>
+                <configuration>
+                  <compilerArgs combine.self="override">
+                    <arg>--limit-modules</arg>
+                    <arg>java.base,java.logging</arg>
+                  </compilerArgs>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
     <profile>
       <id>install-netbeans</id>
       <activation>
@@ -558,7 +641,7 @@
       </activation>
       <properties>
         <!-- java.management is needed by the surefire booter itself -->
-        <argLine>-Ddebug=false --limit-modules java.base,java.xml,jdk.zipfs,java.management</argLine>
+        <argLine>-Ddebug=false --limit-modules java.base,java.xml,jdk.zipfs,java.management,java.logging</argLine>
       </properties>
     </profile>
     <profile>

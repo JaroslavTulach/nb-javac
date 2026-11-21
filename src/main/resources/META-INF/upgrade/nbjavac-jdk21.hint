@@ -1,0 +1,217 @@
+/*
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+@jdk.internal.javac.PreviewFeature($args$) => ;;
+@jdk.internal.javac.NoPreview => ;;
+
+jdk.internal.jmod.JmodFile => nbjavac.jdk21.JmodFileWrapper;;
+jdk.internal.misc.VM => nbjavac.jdk21.JDK21VMWrapper;;
+
+java.lang.ClassLoader.getSystemClassLoader() :: !inClass("javax.tools.ToolProvider")
+=> javax.tools.ToolProvider.class.getClassLoader();;
+
+//TODO: workaround for the NetBeans' approach to javac loading using two different ClassLoaders:
+public static com.sun.source.util.JavacTask instance(javax.annotation.processing.ProcessingEnvironment processingEnvironment) {$whatever$;}
+=>
+public static com.sun.source.util.JavacTask instance(javax.annotation.processing.ProcessingEnvironment processingEnvironment) {
+    if (!processingEnvironment.getClass().getName().equals(
+            "com.sun.tools.javac.processing.JavacProcessingEnvironment"))
+        throw new IllegalArgumentException();
+
+    try {
+        //Cannot refer to the implementation directly, needs to use reflection:
+        java.lang.reflect.Method m = processingEnvironment.getClass().getMethod("getJavacTask");
+
+        return (JavacTask) m.invoke(processingEnvironment);
+    } catch (ReflectiveOperationException | SecurityException | IllegalArgumentException ex) {
+        throw new UnsupportedOperationException(ex);
+    }
+}
+;;
+
+javax.tools.ToolProvider.getSystemTool($class, $module, $name)
+=>
+$class.cast(((java.util.function.Supplier<Object>) () -> {
+    try {
+       Object v;
+       try {
+            v = javax.tools.ToolProvider.getSystemTool($class, $module, $name);
+        } catch (Error err) {
+            v = null;
+        }
+       if (v == null) {
+           v = Class.forName($name).newInstance();
+       }
+       return $class.cast(v);
+    } catch (Throwable t) {
+        throw new Error(t);
+    }
+}).get())
+;;
+
+static java.nio.file.Path findCtSym() {
+    $code$
+}
+=>
+static java.nio.file.Path findCtSym() {
+    return nbjavac.jdk21.JDK21VMWrapper.findCtSym()
+}
+;;
+
+java.nio.file.FileSystems.newFileSystem($path, $a2)
+:: inClass("com.sun.tools.javac.platform.JDKPlatformProvider")
+=>
+nbjavac.jdk21.JDK21VMWrapper.pathFs($path)
+;;
+
+//to eliminate imports:
+jdk.internal.javac.PreviewFeature
+=>
+java.lang.VirtualMachineError
+;;
+
+//to eliminate imports:
+jdk.internal.javac.NoPreview
+=>
+java.lang.VirtualMachineError
+;;
+
+
+// fallback to highest available ct.sym
+com.sun.tools.javac.platform.PlatformUtils.lookupPlatformDescription($s)
+=>
+((java.util.function.Function<String, com.sun.tools.javac.platform.PlatformDescription>) (version) -> {
+    // with --enable-preview, javac appends a ":preview" suffix to the release string
+    // which cannot be parsed as a version
+    final int colon = version.indexOf(':');
+    final String baseVersion = colon >= 0 ? version.substring(0, colon) : version;
+    com.sun.tools.javac.platform.PlatformDescription pd = com.sun.tools.javac.platform.PlatformUtils.lookupPlatformDescription(version);
+    if (pd != null) {
+        return pd;
+    }
+
+    com.sun.tools.javac.platform.PlatformDescription fallback = null;
+    for (int numVersion = Integer.valueOf(baseVersion); fallback == null; numVersion--) {
+        fallback = PlatformUtils.lookupPlatformDescription("" + numVersion);
+    }
+    if (fallback == null) {
+        throw new NullPointerException("No platform found for " + version);
+    }
+    final com.sun.tools.javac.platform.PlatformDescription delegate = fallback;
+
+    return new com.sun.tools.javac.platform.PlatformDescription() {
+        @Override
+        public javax.tools.JavaFileManager getFileManager() {
+            return delegate.getFileManager();
+        }
+
+        @Override
+        public String getSourceVersion() {
+            return baseVersion;
+        }
+
+        @Override
+        public String getTargetVersion() {
+            return baseVersion;
+        }
+
+        @Override
+        public java.util.List<PlatformDescription.PluginInfo<javax.annotation.processing.Processor>> getAnnotationProcessors() {
+            return delegate.getAnnotationProcessors();
+        }
+
+        @Override
+        public java.util.List<com.sun.tools.javac.platform.PlatformDescription.PluginInfo<com.sun.source.util.Plugin>> getPlugins() {
+            return delegate.getPlugins();
+        }
+
+        @Override
+        public java.util.List<String> getAdditionalOptions() {
+            return delegate.getAdditionalOptions();
+        }
+
+        @Override
+        public void close() throws IOException {
+            delegate.close();
+        }
+    };
+}).apply($s);
+;;
+
+sun.reflect.annotation.ExceptionProxy
+=>
+nbjavac.sun.annotation.ExceptionProxy
+;;
+
+sun.reflect.annotation.AnnotationParser
+=>
+nbjavac.sun.annotation.AnnotationParser
+;;
+
+sun.reflect.annotation.AnnotationType
+=>
+nbjavac.sun.annotation.AnnotationType
+;;
+
+sun.reflect.annotation.EnumConstantNotPresentExceptionProxy
+=>
+nbjavac.sun.annotation.EnumConstantNotPresentExceptionProxy
+;;
+
+sun.reflect.annotation.AnnotationTypeMismatchExceptionProxy
+=>
+nbjavac.sun.annotation.AnnotationTypeMismatchExceptionProxy
+;;
+
+sun.reflect.annotation
+=>
+java.lang.Object
+;;
+
+// jdk.internal.opt.CommandLine usage removal?
+
+Iterable<String> $it;
+try {
+    $any$;
+} catch $catches$ :: inClass("com.sun.tools.javac.main.Main")
+=>
+Iterable<String> $it = java.util.Arrays.asList(argv);
+;;
+
+jdk.internal.opt.CommandLine
+=>
+java.lang.VirtualMachineError
+;;
+
+jdk.internal.opt.CommandLine.UnmatchedQuote
+=>
+java.lang.VirtualMachineError
+;;
+
+// jdk.internal.opt.CommandLine end
+
+// JDK 23+
+
+java.lang.runtime.ExactConversionsSupport => nbjavac.jdk21.ExactConversionsSupport;;

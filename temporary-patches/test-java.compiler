@@ -1,2 +1,4 @@
-45d44
-<     exports nbjavac to jdk.compiler;
+45,47d44
+<     exports nbjavac.jdk8 to jdk.compiler;
+<     exports nbjavac.jdk21 to jdk.compiler;
+<     exports nbjavac.sun.annotation to jdk.compiler;
