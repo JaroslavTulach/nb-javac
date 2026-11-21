@@ -22,6 +22,30 @@ jobs:
             java-version: 25.0.0
       - name: Build profile
         run: mvn -B package -P${{ matrix.profile }}
+      - name: Prepare Maven staging inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          api_jar=$(find target -maxdepth 1 -name 'nb-javac-*-api.jar' -print -quit)
+          if [[ -z "$api_jar" ]]; then
+            echo "No API JAR found in target/." >&2
+            exit 1
+          fi
+          version=$(basename "$api_jar")
+          version=${version#nb-javac-}
+          version=${version%-api.jar}
+          mkdir -p maven-staging
+          cp "target/nb-javac-${version}.jar" maven-staging/
+          cp "target/nb-javac-${version}-api.jar" maven-staging/
+          cp "target/nb-javac-${version}-sources.jar" maven-staging/
+          cp .flattened-pom.xml "maven-staging/nb-javac-${version}.pom"
+      - name: Upload Maven staging inputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: maven-input-${{ matrix.profile }}
+          path: maven-staging/
+          if-no-files-found: error
+          retention-days: 1
       - name: Upload compiled classes
         uses: actions/upload-artifact@v4
         with:
@@ -68,3 +92,54 @@ jobs:
           path: target/
       - name: Run tests on prebuilt classes
         run: mvn -B -P${{ matrix.profile }} surefire:test
+
+  stage-maven-repository:
+    name: Stage Maven repository layout
+    needs: [build, test]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Download JDK 8+ artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: maven-input-jdk8+
+          path: profiles/jdk8+
+      - name: Download JDK 21+ artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: maven-input-jdk21+
+          path: profiles/jdk21+
+      - name: Assemble Maven repository tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          api_jar=$(find profiles/jdk8+ -maxdepth 1 -name 'nb-javac-*-api.jar' -print -quit)
+          if [[ -z "$api_jar" ]]; then
+            echo "No JDK 8+ API JAR found in profiles/jdk8+." >&2
+            exit 1
+          fi
+          version=$(basename "$api_jar")
+          version=${version#nb-javac-}
+          version=${version%-api.jar}
+          repository="maven-repository/com/dukescript/nbjavac/nb-javac/${version}"
+          mkdir -p "$repository"
+
+          cp "profiles/jdk8+/nb-javac-${version}.pom" "$repository/"
+          cp "profiles/jdk8+/nb-javac-${version}.jar" "$repository/"
+          cp "profiles/jdk8+/nb-javac-${version}-api.jar" "$repository/"
+          cp "profiles/jdk8+/nb-javac-${version}-sources.jar" "$repository/"
+
+          cp "profiles/jdk21+/nb-javac-${version}.jar" "$repository/nb-javac-${version}-jdk21.jar"
+          cp "profiles/jdk21+/nb-javac-${version}-sources.jar" "$repository/nb-javac-${version}-jdk21-sources.jar"
+
+          (
+            cd maven-repository
+            find com -type f -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
+            sha256sum -c SHA256SUMS
+          )
+      - name: Upload staged Maven repository
+        uses: actions/upload-artifact@v4
+        with:
+          name: maven-repository-${{ github.run_id }}
+          path: maven-repository/
+          if-no-files-found: error
+          retention-days: 7

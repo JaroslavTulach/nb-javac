@@ -109,11 +109,35 @@ As described in [general documentation](README.md) use the following command to
 generate the final JAR files:
 
 ```bash
-$ JAVA_HOME=/jdk-25/ mvn clean package -DskipTests
+$ JAVA_HOME=/jdk-25/ mvn clean package
 ```
 
 JARs `nb-javac-*.jar` (the implementation) and `nb-javac-*-api.jar` are going to appear
 in the `./target/` directory.
+
+### Maven repository staging in CI
+
+After both compatibility profiles pass their runtime tests, GitHub Actions
+uploads a `maven-repository-<run-id>` artifact with a Maven-layout directory
+tree. The unclassified artifacts are the `jdk8+` build; the `jdk21+`
+implementation and sources are staged with `jdk21` and `jdk21-sources`
+classifiers. The `jdk8+` multi-release API JAR is staged once, unclassified,
+for both implementations.
+
+The API JAR is shared because the public and protected signatures are the same
+across profiles, and most API types are interfaces or simple classes with
+little implementation. The small differences are handled by a few
+multi-release overrides, including `SourceVersion` for JDK 11+ and `Modifier`
+for JDK 17+.
+
+The implementation JARs remain separate so `jdk21+` can target Java 21 and
+exclude the older compatibility classes. This keeps the JDK 21+ artifact
+smaller and free of `jdk8+` profile output.
+
+The staged tree is an inspection artifact, not a signed Maven Central
+publication bundle. A `SHA256SUMS` manifest at the repository root is checked
+before upload; after downloading and extracting the artifact, verify it with
+`cd maven-repository && sha256sum -c SHA256SUMS`.
 
 ### Debug & Develop
 

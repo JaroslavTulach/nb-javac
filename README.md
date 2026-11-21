@@ -59,6 +59,9 @@ $ JAVA_HOME=/jdk-8/ mvn surefire:test
 Additional `nb-javac-*-sources.jar` file with sources is created
 in the `./target/` directory by the `package` phase as well.
 
+There is one shared API JAR and two implementation JARs: one for `jdk8+` and
+one for `jdk21+`.
+
 # Publishing to maven central
 
 The artifacts (`com.dukescript.nbjavac:nb-javac`, the version is the `jdk.git.commit`, see [BUILD.md](BUILD.md))
