@@ -2,34 +2,51 @@ name: CI
 #
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
-on: [push]
+on: [push, pull_request]
 #  push:
 #    branches: [ master ]
 jobs: 
-  linux: 
-    name: "Backported nb-javac"
+  build:
+    name: "Build on JDK 25"
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v2
-      - name: Set up JDK 8
-        uses: actions/setup-java@v2
-        with:
-            distribution: 'zulu'
-            java-version: 8
-      - name: Record JDK8
-        run: echo "$JAVA_HOME" | tee jdk8
       - name: Set up JDK 25
         uses: actions/setup-java@v2
         with:
             distribution: 'zulu'
             java-version: 25.0.0
-      - name: Record JDK25
-        run: echo "$JAVA_HOME" | tee jdk25
       - name: Build on JDK25
-        run: ant -f make/langtools/netbeans/nb-javac jar
-      - name: Test on JDK8
-        run: JAVA_HOME=`cat jdk8` ant -f make/langtools/netbeans/nb-javac test
-      - name: Test on JDK25
-        run: ant -f make/langtools/netbeans/nb-javac test
+        run: mvn -B package -DskipTests
+      - name: Upload compiled classes
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled-classes
+          path: target/
+          if-no-files-found: error
+          retention-days: 1
       - name: Build patched JDK25
         run: ./build-jdk.sh
+
+  test:
+    name: "Test on JDK ${{ matrix.java }}"
+    needs: build
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        java: ['8', '11', '17', '21', '25']
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v2
+        with:
+            distribution: 'zulu'
+            java-version: ${{ matrix.java }}
+      - name: Download compiled classes
+        uses: actions/download-artifact@v4
+        with:
+          name: compiled-classes
+          path: target/
+      - name: Run tests on prebuilt classes
+        run: mvn -B surefire:test
