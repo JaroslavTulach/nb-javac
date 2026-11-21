@@ -35,8 +35,6 @@ java.lang.Runtime.version().feature() =>
 ;;
 
 
-@jdk.internal.javac.PreviewFeature($args$) => ;;
-@jdk.internal.javac.NoPreview => ;;
 @java.io.Serial => ;;
 @java.lang.Deprecated($arg1, $args$) => @java.lang.Deprecated;;
 
@@ -98,8 +96,6 @@ java.util.ServiceLoader.load($class, $loader) :: $loader instanceof java.lang.Cl
 =>
 nbjavac.ServiceLoaderWrapper.loadTool($class)
 ;;
-
-jdk.internal.jmod.JmodFile => nbjavac.JmodFileWrapper;;
 
 $1.isEmpty() :: $1 instanceof java.util.Optional
 =>
@@ -188,77 +184,9 @@ $1.formatted($args$) :: $1 instanceof java.lang.String
 String.format($1, $args$)
 ;;
 
-jdk.internal.misc.VM => nbjavac.VMWrapper;;
-
-java.lang.ClassLoader.getSystemClassLoader() :: !inClass("javax.tools.ToolProvider")
-=> javax.tools.ToolProvider.class.getClassLoader();;
-
-//TODO: workaround for the NetBeans' approach to javac loading using two different ClassLoaders:
-public static com.sun.source.util.JavacTask instance(javax.annotation.processing.ProcessingEnvironment processingEnvironment) {$whatever$;}
-=>
-public static com.sun.source.util.JavacTask instance(javax.annotation.processing.ProcessingEnvironment processingEnvironment) {
-    if (!processingEnvironment.getClass().getName().equals(
-            "com.sun.tools.javac.processing.JavacProcessingEnvironment"))
-        throw new IllegalArgumentException();
-
-    try {
-        //Cannot refer to the implementation directly, needs to use reflection:
-        java.lang.reflect.Method m = processingEnvironment.getClass().getMethod("getJavacTask");
-
-        return (JavacTask) m.invoke(processingEnvironment);
-    } catch (NoSuchMethodException ex) {
-        throw new UnsupportedOperationException(ex);
-    } catch (SecurityException ex) {
-        throw new UnsupportedOperationException(ex);
-    } catch (IllegalAccessException ex) {
-        throw new UnsupportedOperationException(ex);
-    } catch (IllegalArgumentException ex) {
-        throw new UnsupportedOperationException(ex);
-    } catch (java.lang.reflect.InvocationTargetException ex) {
-        throw new UnsupportedOperationException(ex);
-    }
-}
-;;
-
 $1.resolve("jrt-fs.jar").toUri().toURL() :: $1 instanceof java.nio.file.Path
 =>
 $1.resolve("lib").resolve("jrt-fs.jar").toUri().toURL()
-;;
-
-
-javax.tools.ToolProvider.getSystemTool($class, $module, $name)
-=>
-$class.cast(((java.util.function.Supplier<Object>) () -> {
-    try {
-       Object v;
-       try {
-            v = javax.tools.ToolProvider.getSystemTool($class, $module, $name);
-        } catch (Error err) {
-            v = null;
-        }
-       if (v == null) {
-           v = Class.forName($name).newInstance();
-       }
-       return $class.cast(v);
-    } catch (Throwable t) {
-        throw new Error(t);
-    }
-}).get())
-;;
-
-static java.nio.file.Path findCtSym() {
-    $code$
-}
-=>
-static java.nio.file.Path findCtSym() {
-    return nbjavac.VMWrapper.findCtSym()
-}
-;;
-
-java.nio.file.FileSystems.newFileSystem($path, $a2)
-:: inClass("com.sun.tools.javac.platform.JDKPlatformProvider")
-=>
-nbjavac.VMWrapper.pathFs($path)
 ;;
 
 java.nio.file.FileSystems.newFileSystem($path, $env, $classloader) :: $path instanceof java.nio.file.Path
@@ -298,104 +226,9 @@ java.util.Arrays.stream($1).map($2).collect(java.util.stream.Collectors.toList()
 ;;
 
 //to eliminate imports:
-jdk.internal.javac.PreviewFeature
-=>
-java.lang.VirtualMachineError
-;;
-
-//to eliminate imports:
-jdk.internal.javac.NoPreview
-=>
-java.lang.VirtualMachineError
-;;
-
-//to eliminate imports:
 java.io.Serial
 =>
 java.lang.VirtualMachineError
-;;
-
-// fallback to highest available ct.sym
-$type $varName = com.sun.tools.javac.platform.PlatformUtils.lookupPlatformDescription($s);
-=>
-final String version = $s;
-$type $varName = ((java.util.function.Supplier<com.sun.tools.javac.platform.PlatformDescription>) () -> {
-    com.sun.tools.javac.platform.PlatformDescription pd = com.sun.tools.javac.platform.PlatformUtils.lookupPlatformDescription(version);
-    if (pd != null) {
-        return pd;
-    }
-
-    com.sun.tools.javac.platform.PlatformDescription fallback = null;
-    for (int numVersion = Integer.valueOf(version); fallback == null; numVersion--) {
-        fallback = PlatformUtils.lookupPlatformDescription("" + numVersion);
-    }
-    if (fallback == null) {
-        throw new NullPointerException("No platform found for " + version);
-    }
-    final com.sun.tools.javac.platform.PlatformDescription delegate = fallback;
-
-    return new com.sun.tools.javac.platform.PlatformDescription() {
-        @Override
-        public javax.tools.JavaFileManager getFileManager() {
-            return delegate.getFileManager();
-        }
-
-        @Override
-        public String getSourceVersion() {
-            return version;
-        }
-
-        @Override
-        public String getTargetVersion() {
-            return version;
-        }
-
-        @Override
-        public java.util.List<PlatformDescription.PluginInfo<javax.annotation.processing.Processor>> getAnnotationProcessors() {
-            return delegate.getAnnotationProcessors();
-        }
-
-        @Override
-        public java.util.List<com.sun.tools.javac.platform.PlatformDescription.PluginInfo<com.sun.source.util.Plugin>> getPlugins() {
-            return delegate.getPlugins();
-        }
-
-        @Override
-        public java.util.List<String> getAdditionalOptions() {
-            return delegate.getAdditionalOptions();
-        }
-
-        @Override
-        public void close() throws IOException {
-            delegate.close();
-        }
-    };
-}).get();
-;;
-
-sun.reflect.annotation.ExceptionProxy
-=>
-nbjavac.sun.annotation.ExceptionProxy
-;;
-
-sun.reflect.annotation.AnnotationParser
-=>
-nbjavac.sun.annotation.AnnotationParser
-;;
-
-sun.reflect.annotation.AnnotationType
-=>
-nbjavac.sun.annotation.AnnotationType
-;;
-
-sun.reflect.annotation.EnumConstantNotPresentExceptionProxy
-=>
-nbjavac.sun.annotation.EnumConstantNotPresentExceptionProxy
-;;
-
-sun.reflect.annotation.AnnotationTypeMismatchExceptionProxy
-=>
-nbjavac.sun.annotation.AnnotationTypeMismatchExceptionProxy
 ;;
 
 $cs.isEmpty() :: $cs instanceof java.lang.CharSequence
@@ -431,29 +264,6 @@ $coll.toArray(new com.sun.tools.javac.code.Type[0])
 $coll.toArray($expr) :: inClass("com.sun.tools.javac.file.Locations") && containsAny($expr, "java.io.Closeable[]")
 =>
 $coll.toArray(new java.io.Closeable[0])
-;;
-
-Iterable<String> $it;
-try {
-    $any$;
-} catch $catches$ :: inClass("com.sun.tools.javac.main.Main")
-=>
-Iterable<String> $it = java.util.Arrays.asList(argv);
-;;
-
-jdk.internal.opt.CommandLine
-=>
-java.lang.VirtualMachineError
-;;
-
-jdk.internal.opt.CommandLine.UnmatchedQuote
-=>
-java.lang.VirtualMachineError
-;;
-
-sun.reflect.annotation
-=>
-java.lang.Object
 ;;
 
 $stream.flatMap(java.util.Optional::stream) :: $stream instanceof java.util.stream.Stream
@@ -493,8 +303,6 @@ $map.sequencedKeySet() :: $map instanceof java.util.SequencedMap
 =>
 new java.util.LinkedHashSet<>($map.keySet());
 ;;
-
-java.lang.runtime.ExactConversionsSupport => nbjavac.ExactConversionsSupport;;
 
 java.util.Set.copyOf($1)
 =>

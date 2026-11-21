@@ -7,8 +7,12 @@ on: [push, pull_request]
 #    branches: [ master ]
 jobs: 
   build:
-    name: "Build on JDK 25"
+    name: "Build ${{ matrix.profile }} on JDK 25"
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: ['jdk8+', 'jdk21+']
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 25
@@ -16,12 +20,12 @@ jobs:
         with:
             distribution: 'zulu'
             java-version: 25.0.0
-      - name: Build on JDK25
-        run: mvn -B package -DskipTests
+      - name: Build profile
+        run: mvn -B package -DskipTests -P${{ matrix.profile }}
       - name: Upload compiled classes
         uses: actions/upload-artifact@v4
         with:
-          name: compiled-classes
+          name: compiled-${{ matrix.profile }}
           path: target/
           if-no-files-found: error
           retention-days: 1
@@ -29,13 +33,27 @@ jobs:
         run: ./build-jdk.sh
 
   test:
-    name: "Test on JDK ${{ matrix.java }}"
+    name: "Test ${{ matrix.profile }} on JDK ${{ matrix.java }}"
     needs: build
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        java: ['8', '11', '17', '21', '25']
+        include:
+          - profile: jdk8+
+            java: '8'
+          - profile: jdk8+
+            java: '11'
+          - profile: jdk8+
+            java: '17'
+          - profile: jdk8+
+            java: '21'
+          - profile: jdk8+
+            java: '25'
+          - profile: jdk21+
+            java: '21'
+          - profile: jdk21+
+            java: '25'
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK ${{ matrix.java }}
@@ -46,7 +64,7 @@ jobs:
       - name: Download compiled classes
         uses: actions/download-artifact@v4
         with:
-          name: compiled-classes
+          name: compiled-${{ matrix.profile }}
           path: target/
       - name: Run tests on prebuilt classes
-        run: mvn -B surefire:test
+        run: mvn -B -P${{ matrix.profile }} surefire:test

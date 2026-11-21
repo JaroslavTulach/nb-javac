@@ -16,6 +16,12 @@ in the `jdk` subdirectory and integrated into the JDK's `javac` **official repos
 $ JAVA_HOME=/jdk-25/ mvn package -DskipTests
 ```
 
+By default this project enables `jdk8+` compatibility profile. Such a profile guarantees the
+generated `nb-javac` can run on JDK8+, but in order to do so, it needs to apply more tweaks
+to the original OpenJDK sources. If you are not interested in such a level of portability,
+feel free to use `-Pjdk21+` profile to select only the
+refactorings needed for JDK 21 and later.
+
 Use the above command to build everything at once. The build is driven by
 the standard Maven lifecycle phases:
 
@@ -23,7 +29,7 @@ the standard Maven lifecycle phases:
 | ----- | ------------ |
 | `initialize` | checks the OpenJDK sources out into `jdk` (see below) |
 | `generate-sources` | applies the automatic refactorings to the sources (see below) |
-| `compile` | compiles the sources with the [Frgaal](https://frgaal.org) compiler into Java 8 bytecode (and the `SourceVersion` for Java 11) |
+| `compile` | compiles the sources to the appropriate target Java bytecode |
 | `test` | compiles and runs the tests with `surefire` (skip with `-DskipTests`, run one with `-Dtest=StringWrapperTest`) |
 | `package` | creates the `api`, implementation and `sources` jars |
 | `deploy` | with the `release` profile signs and deploys the artifacts (see the [README](README.md)) |
@@ -66,9 +72,12 @@ a fresh copy of the `jdk` repository from scratch.
 
 ### Automatically processing the sources
 
-Once the JDK's `javac` sources are in the `jdk` subdirectory, it is necessary
-to apply [advanced refactorings](./make/langtools/netbeans/nb-javac/src/META-INF/upgrade/nbjavac.hint)
-to them. This is done by executing the [jackpot](https://netbeans.apache.org/jackpot/HintsFileFormat.html)
+Once the JDK's `javac` sources are in the `jdk` subdirectory, the default
+`jdk8+` profile combines the shared [JDK 21+ refactorings](./make/langtools/netbeans/nb-javac/src/META-INF/upgrade/nbjavac-jdk21.hint)
+with the additional [JDK 8+ compatibility refactorings](./make/langtools/netbeans/nb-javac/src/META-INF/upgrade/nbjavac.hint).
+The shared rules live only in the first file; the second contains only the
+additional rules. Use `-Pjdk21+` to apply only the shared set. The selected set
+is applied by the [Jackpot](https://netbeans.apache.org/jackpot/HintsFileFormat.html)
 phase:
 
 ```bash
@@ -76,9 +85,10 @@ $ JAVA_HOME=/jdk-25/ mvn generate-sources
 ```
 
 This step copies the `javac` sources from the `jdk` subdirectory into a sibling
-`src` subdirectory and applies necessary transformations to them.
-The goal of such transformations is to eliminate usage of JDK9+ APIs
-and replace them with JDK8 only APIs.
+`src` subdirectory and applies the selected transformations. The generated
+`src/jackpot-done` marker records the profile, OpenJDK commit, and checksum of
+the combined hint set. Switching profiles or changing a hint file regenerates
+sources from the JDK checkout automatically.
 
 The sources under the `src/java.compiler` and `src/jdk.compiler` shall not
 be edited manually. Rather than that edit the sources in the original

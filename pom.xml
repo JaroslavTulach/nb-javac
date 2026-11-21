@@ -56,6 +56,8 @@
     <maven.deploy.skip>true</maven.deploy.skip>
     <nbjavac.tools.dir>${project.basedir}/lib</nbjavac.tools.dir>
     <nbjavac.ant.dir>${project.basedir}/make/langtools/netbeans/nb-javac</nbjavac.ant.dir>
+    <jackpot.profile>jdk8+</jackpot.profile>
+    <jackpot.hint.files>nbjavac-jdk21.hint,nbjavac.hint</jackpot.hint.files>
   </properties>
 
   <dependencies>
@@ -484,6 +486,41 @@
   </build>
   <profiles>
     <profile>
+      <id>jdk8+</id>
+      <properties>
+        <jackpot.profile>jdk8+</jackpot.profile>
+        <jackpot.hint.files>nbjavac-jdk21.hint,nbjavac.hint</jackpot.hint.files>
+      </properties>
+    </profile>
+    <profile>
+      <id>jdk21+</id>
+      <properties>
+        <jackpot.profile>jdk21+</jackpot.profile>
+        <jackpot.hint.files>nbjavac-jdk21.hint</jackpot.hint.files>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+              <target>21</target>
+            </configuration>
+            <executions>
+              <execution>
+                <id>default-testCompile</id>
+                <configuration>
+                  <compilerArgs combine.self="override">
+                    <arg>--limit-modules</arg>
+                    <arg>java.base,java.logging</arg>
+                  </compilerArgs>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
       <id>install-netbeans</id>
       <activation>
         <property>
@@ -558,7 +595,7 @@
       </activation>
       <properties>
         <!-- java.management is needed by the surefire booter itself -->
-        <argLine>-Ddebug=false --limit-modules java.base,java.xml,jdk.zipfs,java.management</argLine>
+        <argLine>-Ddebug=false --limit-modules java.base,java.xml,jdk.zipfs,java.management,java.logging</argLine>
       </properties>
     </profile>
     <profile>
