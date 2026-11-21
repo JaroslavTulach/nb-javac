@@ -43,8 +43,11 @@ to the original OpenJDK sources. If you are not interested in such a level of po
 feel free to use `-Pjdk21+` profile to select only the
 refactorings needed for JDK 21 and later.
 
+The profiles share the Maven output directory. Run `mvn clean` when switching
+profiles so the next artifact cannot contain classes from the previous build.
+
 ```bash
-$ JAVA_HOME=/jdk-25/ mvn package -Pjdk21+
+$ JAVA_HOME=/jdk-25/ mvn clean package -Pjdk21+
 ```
 
 Two jars namely `nb-javac-*-api.jar` and `nb-javac-*.jar` (the implementation)

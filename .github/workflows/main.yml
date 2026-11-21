@@ -21,7 +21,7 @@ jobs:
             distribution: 'zulu'
             java-version: 25.0.0
       - name: Build profile
-        run: mvn -B package -DskipTests -P${{ matrix.profile }}
+        run: mvn -B package -P${{ matrix.profile }}
       - name: Upload compiled classes
         uses: actions/upload-artifact@v4
         with:

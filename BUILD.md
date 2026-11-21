@@ -13,7 +13,7 @@ Bugfixes, features and other changes to `javac` sources are supposed to be done
 in the `jdk` subdirectory and integrated into the JDK's `javac` **official repository**.
 
 ```bash
-$ JAVA_HOME=/jdk-25/ mvn package -DskipTests
+$ JAVA_HOME=/jdk-25/ mvn clean package
 ```
 
 By default this project enables `jdk8+` compatibility profile. Such a profile guarantees the
@@ -21,6 +21,10 @@ generated `nb-javac` can run on JDK8+, but in order to do so, it needs to apply 
 to the original OpenJDK sources. If you are not interested in such a level of portability,
 feel free to use `-Pjdk21+` profile to select only the
 refactorings needed for JDK 21 and later.
+
+Both profiles share Maven's output directory. Run `mvn clean` when switching
+profiles to avoid carrying compiled classes from the previous profile into
+the next artifact. A regular `mvn clean` retains the OpenJDK checkout.
 
 Use the above command to build everything at once. The build is driven by
 the standard Maven lifecycle phases:
@@ -31,7 +35,7 @@ the standard Maven lifecycle phases:
 | `generate-sources` | applies the automatic refactorings to the sources (see below) |
 | `compile` | compiles the sources to the appropriate target Java bytecode |
 | `test` | compiles and runs the tests with `surefire` (skip with `-DskipTests`, run one with `-Dtest=StringWrapperTest`) |
-| `package` | creates the `api`, implementation and `sources` jars |
+| `package` | creates the `api`, implementation and `sources` jars and checks their consistency |
 | `deploy` | with the `release` profile signs and deploys the artifacts (see the [README](README.md)) |
 
 Any `-Dkey=value` given to `mvn` is passed to the build. Read below to control individual steps of the build.

@@ -417,7 +417,11 @@
                 <include>javax/tools/*</include>
                 <include>jdk/internal/PreviewFeature*</include>
                 <include>javax/annotation/**</include>
-                <include>META-INF/versions/**</include>
+                <include>META-INF/versions/**/com/sun/source/**</include>
+                <include>META-INF/versions/**/javax/lang/**</include>
+                <include>META-INF/versions/**/javax/tools/*</include>
+                <include>META-INF/versions/**/jdk/internal/PreviewFeature*</include>
+                <include>META-INF/versions/**/javax/annotation/**</include>
                 <include>README.md</include>
                 <include>SECURITY.md</include>
               </includes>
@@ -426,6 +430,24 @@
                 <exclude>META-INF/versions/*/META-INF/**</exclude>
               </excludes>
             </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>3.5.3</version>
+        <configuration>
+          <systemPropertyVariables>
+            <nbjavac.api.jar>${project.build.directory}/${project.build.finalName}-api.jar</nbjavac.api.jar>
+          </systemPropertyVariables>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>
@@ -506,6 +528,12 @@
               <target>21</target>
             </configuration>
             <executions>
+              <execution>
+                <id>compile-sourceversion-java11</id>
+                <configuration>
+                  <skipMain>true</skipMain>
+                </configuration>
+              </execution>
               <execution>
                 <id>default-testCompile</id>
                 <configuration>
