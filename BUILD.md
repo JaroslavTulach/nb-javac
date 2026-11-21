@@ -115,8 +115,9 @@ generate the final JAR files:
 $ JAVA_HOME=/jdk-25/ mvn clean package
 ```
 
-JARs `nb-javac-*.jar` (the implementation) and `nb-javac-*-api.jar` are going to appear
-in the `./target/` directory.
+The default `jdk8+` profile produces `nb-javac-<version>.jar`; the `jdk21+`
+profile produces `nb-javac-<version>-jdk21.jar`. Both produce the shared
+`nb-javac-<version>-api.jar` in `./target/`.
 
 ### Maven repository staging in CI
 

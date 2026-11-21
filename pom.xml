@@ -56,6 +56,7 @@
     <maven.deploy.skip>true</maven.deploy.skip>
     <nbjavac.tools.dir>${project.basedir}/lib</nbjavac.tools.dir>
     <nbjavac.ant.dir>${project.basedir}/make/langtools/netbeans/nb-javac</nbjavac.ant.dir>
+    <nbjavac.implementation.finalName>${project.build.finalName}</nbjavac.implementation.finalName>
     <jackpot.profile>jdk8+</jackpot.profile>
     <jackpot.hint.files>nbjavac-jdk21.hint,nbjavac.hint</jackpot.hint.files>
   </properties>
@@ -363,6 +364,7 @@
             <!-- the implementation jar is the main artifact -->
             <id>default-jar</id>
             <configuration>
+              <finalName>${nbjavac.implementation.finalName}</finalName>
               <includes>
                 <include>META-INF/services/**</include>
                 <include>META-INF/ct*/**</include>
@@ -447,7 +449,7 @@
         <configuration>
           <systemPropertyVariables>
             <nbjavac.api.jar>${project.build.directory}/${project.build.finalName}-api.jar</nbjavac.api.jar>
-            <nbjavac.implementation.jar>${project.build.directory}/${project.build.finalName}.jar</nbjavac.implementation.jar>
+            <nbjavac.implementation.jar>${project.build.directory}/${nbjavac.implementation.finalName}.jar</nbjavac.implementation.jar>
             <nbjavac.profile>${jackpot.profile}</nbjavac.profile>
           </systemPropertyVariables>
         </configuration>
@@ -529,6 +531,7 @@
       <properties>
         <jackpot.profile>jdk21+</jackpot.profile>
         <jackpot.hint.files>nbjavac-jdk21.hint</jackpot.hint.files>
+        <nbjavac.implementation.finalName>${project.build.finalName}-jdk21</nbjavac.implementation.finalName>
       </properties>
       <build>
         <plugins>
