@@ -26,6 +26,7 @@
 package nbjavac;
 
 import junit.framework.TestCase;
+import nbjavac.jdk8.StringWrapper;
 
 public class StringWrapperTest extends TestCase {
 

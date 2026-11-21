@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2026, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,19 +22,25 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package nbjavac;
+package nbjavac.jdk8;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.lang.IllegalStateException;
+import java.lang.String;
 
-public class CollectionsWrapper {
-    private CollectionsWrapper() {
+public final class RuntimeWR {
+    private RuntimeWR() {
     }
 
-    public static <T> Set<T> copyOfSet(Collection<? extends T> source) {
-        return Collections.unmodifiableSet(new HashSet<>(source));
-    }
+    public static final class Version {
+        private Version() {
+        }
 
+        public int feature() {
+            return 8;
+        }
+
+        public static RuntimeWR.Version parse(String v) {
+            throw new IllegalStateException();
+        }
+    }
 }

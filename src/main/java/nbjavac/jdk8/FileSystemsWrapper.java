@@ -22,7 +22,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package nbjavac;
+package nbjavac.jdk8;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;

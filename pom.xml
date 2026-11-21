@@ -77,7 +77,7 @@
   </dependencies>
 
   <build>
-    <sourceDirectory>${project.basedir}/make/langtools/netbeans/nb-javac/src</sourceDirectory>
+    <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
     <testSourceDirectory>${project.basedir}/make/langtools/netbeans/nb-javac/test</testSourceDirectory>
     <testResources>
       <!-- prebuilt class files used as test data -->
@@ -98,19 +98,16 @@
         </includes>
       </resource>
       <resource>
-        <directory>${project.basedir}/make/langtools/netbeans/nb-javac/src</directory>
+        <directory>${project.basedir}/src/main/resources</directory>
+      </resource>
+      <resource>
+        <directory>${project.basedir}/src/generated/java/java.compiler/share/classes</directory>
         <excludes>
           <exclude>**/*.java</exclude>
         </excludes>
       </resource>
       <resource>
-        <directory>${project.basedir}/src/java.compiler/share/classes</directory>
-        <excludes>
-          <exclude>**/*.java</exclude>
-        </excludes>
-      </resource>
-      <resource>
-        <directory>${project.basedir}/src/jdk.compiler/share/classes</directory>
+        <directory>${project.basedir}/src/generated/java/jdk.compiler/share/classes</directory>
         <excludes>
           <exclude>**/*.java</exclude>
           <exclude>com/sun/tools/javac/launcher/**</exclude>
@@ -128,7 +125,16 @@
         <configuration>
           <filesets>
             <fileset>
+              <directory>${project.basedir}/src/generated</directory>
+            </fileset>
+            <fileset>
               <directory>${project.basedir}/src</directory>
+              <includes>
+                <include>java.base/**</include>
+                <include>java.compiler/**</include>
+                <include>jdk.compiler/**</include>
+                <include>jackpot-done</include>
+              </includes>
             </fileset>
             <fileset>
               <directory>${project.basedir}/lib</directory>
@@ -218,9 +224,9 @@
             </goals>
             <configuration>
               <sources>
-                <source>${project.basedir}/src/java.compiler/share/classes</source>
-                <source>${project.basedir}/src/jdk.compiler/share/classes</source>
-                <source>${project.basedir}/src/java.base/share/classes</source>
+                <source>${project.basedir}/src/generated/java/java.compiler/share/classes</source>
+                <source>${project.basedir}/src/generated/java/jdk.compiler/share/classes</source>
+                <source>${project.basedir}/src/generated/java/java.base/share/classes</source>
               </sources>
             </configuration>
           </execution>
@@ -380,9 +386,11 @@
               <classifier>sources</classifier>
               <classesDirectory>${project.basedir}</classesDirectory>
               <includes>
-                <include>src/java.base/**</include>
-                <include>src/jdk.compiler/**</include>
-                <include>src/java.compiler/**</include>
+                <include>src/main/java/**</include>
+                <include>src/generated/java/java.base/**</include>
+                <include>src/generated/java/jdk.compiler/**</include>
+                <include>src/generated/java/java.compiler/**</include>
+                <include>src/main/resources/**</include>
                 <include>make/langtools/netbeans/nb-javac/**</include>
                 <include>make/langtools/tools/**</include>
                 <include>make/langtools/build.xml</include>
@@ -439,6 +447,8 @@
         <configuration>
           <systemPropertyVariables>
             <nbjavac.api.jar>${project.build.directory}/${project.build.finalName}-api.jar</nbjavac.api.jar>
+            <nbjavac.implementation.jar>${project.build.directory}/${project.build.finalName}.jar</nbjavac.implementation.jar>
+            <nbjavac.profile>${jackpot.profile}</nbjavac.profile>
           </systemPropertyVariables>
         </configuration>
         <executions>
@@ -522,6 +532,19 @@
       </properties>
       <build>
         <plugins>
+          <plugin>
+            <artifactId>maven-jar-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>default-jar</id>
+                <configuration>
+                  <excludes>
+                    <exclude>nbjavac/jdk8/**</exclude>
+                  </excludes>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
           <plugin>
             <artifactId>maven-compiler-plugin</artifactId>
             <configuration>

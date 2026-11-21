@@ -77,8 +77,8 @@ a fresh copy of the `jdk` repository from scratch.
 ### Automatically processing the sources
 
 Once the JDK's `javac` sources are in the `jdk` subdirectory, the default
-`jdk8+` profile combines the shared [JDK 21+ refactorings](./make/langtools/netbeans/nb-javac/src/META-INF/upgrade/nbjavac-jdk21.hint)
-with the additional [JDK 8+ compatibility refactorings](./make/langtools/netbeans/nb-javac/src/META-INF/upgrade/nbjavac.hint).
+`jdk8+` profile combines the shared [JDK 21+ refactorings](./src/main/resources/META-INF/upgrade/nbjavac-jdk21.hint)
+with the additional [JDK 8+ compatibility refactorings](./src/main/resources/META-INF/upgrade/nbjavac.hint).
 The shared rules live only in the first file; the second contains only the
 additional rules. Use `-Pjdk21+` to apply only the shared set. The selected set
 is applied by the [Jackpot](https://netbeans.apache.org/jackpot/HintsFileFormat.html)
@@ -88,14 +88,17 @@ phase:
 $ JAVA_HOME=/jdk-25/ mvn generate-sources
 ```
 
-This step copies the `javac` sources from the `jdk` subdirectory into a sibling
-`src` subdirectory and applies the selected transformations. The generated
-`src/jackpot-done` marker records the profile, OpenJDK commit, and checksum of
-the combined hint set. Switching profiles or changing a hint file regenerates
-sources from the JDK checkout automatically.
+This step copies the `javac` sources from the `jdk` subdirectory into
+`src/generated/java` and applies the selected transformations. The generated
+`src/generated/java/jackpot-done` marker records the profile, OpenJDK commit,
+and checksum of the combined hint set. Switching profiles or changing a hint
+file regenerates sources from the JDK checkout automatically. Project-owned
+helper classes live separately in `src/main/java`, split between `nbjavac.jdk8`
+and `nbjavac.jdk21`.
 
-The sources under the `src/java.compiler` and `src/jdk.compiler` shall not
-be edited manually. Rather than that edit the sources in the original
+The sources under `src/generated/java/java.compiler` and
+`src/generated/java/jdk.compiler` shall not be edited manually. Instead, edit
+the sources in the original
 `jdk/src/java.compiler/` and `jdk/src/jdk.compiler/` directories. To apply
 the refactorings again execute:
 

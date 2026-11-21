@@ -22,25 +22,15 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package nbjavac;
+package nbjavac.jdk21;
 
-import java.lang.IllegalStateException;
-import java.lang.String;
+import java.io.IOException;
+import java.nio.file.Path;
 
-public final class RuntimeWR {
-    private RuntimeWR() {
+public class JmodFileWrapper {
+
+    public static void checkMagic(Path file) throws IOException {
+        //TODO: perform validation
     }
 
-    public static final class Version {
-        private Version() {
-        }
-
-        public int feature() {
-            return 8;
-        }
-
-        public static RuntimeWR.Version parse(String v) {
-            throw new IllegalStateException();
-        }
-    }
 }

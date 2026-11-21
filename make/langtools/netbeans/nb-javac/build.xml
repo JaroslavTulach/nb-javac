@@ -11,7 +11,7 @@
     <!-- jdk.git.url and jdk.git.commit are defined by pom.xml -->
     <property name="root" location="../../../.."/>
     <property name="jdk.repo" location="${root}/jdk"/>
-    <property name="src.dir" location="${root}/src"/>
+    <property name="src.dir" location="${root}/src/generated/java"/>
     <property name="tools.dir" location="${root}/lib"/>
 
     <target name="-check-properties">
@@ -37,7 +37,7 @@
         <property name="jackpot.combined.hint.file"
                   location="${root}/target/nbjavac-${jackpot.profile}.hint"/>
         <concat destfile="${jackpot.combined.hint.file}" fixlastline="yes">
-            <filelist dir="${root}/make/langtools/netbeans/nb-javac/src/META-INF/upgrade"
+            <filelist dir="${root}/src/main/resources/META-INF/upgrade"
                       files="${jackpot.hint.files}"/>
         </concat>
         <checksum file="${jackpot.combined.hint.file}" algorithm="SHA-256"
@@ -163,6 +163,10 @@
     <target name="jackpot" depends="init,-check-jackpot.marker" unless="jackpot.has.been.applied"
             description="Copies the OpenJDK sources and applies the refactorings to them.">
         <delete dir="${src.dir}"/>
+        <delete dir="${root}/src/java.base"/>
+        <delete dir="${root}/src/java.compiler"/>
+        <delete dir="${root}/src/jdk.compiler"/>
+        <delete file="${root}/src/jackpot-done"/>
         <mkdir dir="${src.dir}"/>
         <copy todir="${src.dir}">
             <fileset dir="${jdk.repo}/src/">
@@ -193,7 +197,7 @@
                 </selector>
             </fileset>
             <filterchain>
-                 <replacestring from="package java.lang.runtime;" to="package nbjavac;"/>
+                 <replacestring from="package java.lang.runtime;" to="package nbjavac.jdk21;"/>
             </filterchain>
         </copy>
 
@@ -201,7 +205,7 @@
             <arg value="-hint-file"/>
             <arg value="${jackpot.combined.hint.file}"/>
             <arg value="-sourcepath"/>
-            <arg value="${root}/make/langtools/netbeans/nb-javac/src/:${src.dir}/jdk.compiler/share/classes/:${src.dir}/java.compiler/share/classes:${src.dir}/java.base/share/classes"/>
+            <arg value="${root}/src/main/java/:${src.dir}/jdk.compiler/share/classes/:${src.dir}/java.compiler/share/classes:${src.dir}/java.base/share/classes"/>
             <arg value="-source"/>
             <arg value="8"/>
             <arg value="--apply"/>

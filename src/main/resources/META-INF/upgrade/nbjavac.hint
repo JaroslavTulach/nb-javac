@@ -27,7 +27,7 @@ java.util.Set.of($args$) => java.util.Collections.unmodifiableSet(new java.util.
 java.util.List.of($args$) => java.util.Collections.unmodifiableList(java.util.Arrays.asList($args$));;
 java.util.List.copyOf($list) => java.util.Collections.unmodifiableList(new java.util.ArrayList<>($list));;
 java.util.Map.of($k, $v) => java.util.Collections.unmodifiableMap(java.util.Collections.singletonMap($k, $v));;
-java.util.Map.of($k1, $v1, $k2, $v2) => nbjavac.VMWrapper.toMap($k1, $v1, $k2, $v2);;
+java.util.Map.of($k1, $v1, $k2, $v2) => nbjavac.jdk21.JDK21VMWrapper.toMap($k1, $v1, $k2, $v2);;
 
 //XXX: incorrect!
 java.lang.Runtime.version().feature() =>
@@ -56,45 +56,45 @@ $1.flip() :: $1 instanceof java.nio.CharBuffer && !parentMatches("$1.flip();")
 
 java.nio.file.Path.of($uri) :: $uri instanceof java.net.URI
 =>
-nbjavac.PathWrapper.of($uri)
+nbjavac.jdk8.PathWrapper.of($uri)
 ;;
 
 java.lang.module.ModuleDescriptor
 =>
-nbjavac.ModuleWrapper.ModuleDescriptor
+nbjavac.jdk8.ModuleWrapper.ModuleDescriptor
 ;;
 
 $class.getModule() :: $class instanceof java.lang.Class
 =>
-nbjavac.ModuleWrapper.getModule($class)
+nbjavac.jdk8.ModuleWrapper.getModule($class)
 ;;
 
 $cl.getUnnamedModule() :: $cl instanceof java.lang.ClassLoader
 =>
-nbjavac.ModuleWrapper.getUnnamedModule($cl)
+nbjavac.jdk8.ModuleWrapper.getUnnamedModule($cl)
 ;;
 
-java.lang.Runtime.Version => nbjavac.RuntimeWR.Version;;
+java.lang.Runtime.Version => nbjavac.jdk8.RuntimeWR.Version;;
 
-java.lang.Module => nbjavac.ModuleWrapper;;
+java.lang.Module => nbjavac.jdk8.ModuleWrapper;;
 
-java.lang.module.ModuleFinder => nbjavac.ModuleWrapper.ModuleFinder;;
-java.lang.ModuleLayer => nbjavac.ModuleWrapper.ModuleLayer;;
-java.lang.module.Configuration => nbjavac.ModuleWrapper.Configuration;;
+java.lang.module.ModuleFinder => nbjavac.jdk8.ModuleWrapper.ModuleFinder;;
+java.lang.ModuleLayer => nbjavac.jdk8.ModuleWrapper.ModuleLayer;;
+java.lang.module.Configuration => nbjavac.jdk8.ModuleWrapper.Configuration;;
 
 java.util.ServiceLoader.load($layer, $class) :: $layer instanceof java.lang.ModuleLayer && $class instanceof java.lang.Class
 =>
-nbjavac.ServiceLoaderWrapper.load($layer, $class)
+nbjavac.jdk8.ServiceLoaderWrapper.load($layer, $class)
 ;;
 
 java.util.ServiceLoader.load($class, $loader) :: $loader instanceof java.lang.ClassLoader && $class instanceof java.lang.Class && !inClass("com.sun.tools.doclint.DocLint") && !inClass("javax.tools.ToolProvider");
 =>
-nbjavac.ServiceLoaderWrapper.loadWithClassLoader($class, $loader)
+nbjavac.jdk8.ServiceLoaderWrapper.loadWithClassLoader($class, $loader)
 ;;
 
 java.util.ServiceLoader.load($class, $loader) :: $loader instanceof java.lang.ClassLoader && $class instanceof java.lang.Class && inClass("javax.tools.ToolProvider");
 =>
-nbjavac.ServiceLoaderWrapper.loadTool($class)
+nbjavac.jdk8.ServiceLoaderWrapper.loadTool($class)
 ;;
 
 $1.isEmpty() :: $1 instanceof java.util.Optional
@@ -109,39 +109,39 @@ $1.get()
 
 java.util.Optional.of($p1).map($p2).ifPresentOrElse($2, $3)
 =>
-nbjavac.VMWrapper.optionalIfPresentOrElse(java.util.Optional.of($p1).map($p2), $2, $3)
+nbjavac.jdk21.JDK21VMWrapper.optionalIfPresentOrElse(java.util.Optional.of($p1).map($p2), $2, $3)
 ;;
 
 // XXX: reported as https://github.com/apache/netbeans-jackpot30/issues/38
 //should be:
 //$1.stream() :: $1 instanceof java.util.Optional
 //=>
-//nbjavac.VMWrapper.optional2Stream($1)
+//nbjavac.jdk8.CollectionsWrapper.optional2Stream($1)
 //;;
 //but that does not work in DeferredLintHandler:
 java.util.Optional.of($p1).map($p2).stream()
 =>
-nbjavac.CollectionsWrapper.optional2Stream(java.util.Optional.of($p1).map($p2))
+nbjavac.jdk8.CollectionsWrapper.optional2Stream(java.util.Optional.of($p1).map($p2))
 ;;
 
 java.util.Objects.requireNonNullElse($obj, $def)
 =>
-nbjavac.ObjectsWrapper.requireNonNullElse($obj, $def)
+nbjavac.jdk8.ObjectsWrapper.requireNonNullElse($obj, $def)
 ;;
 
 java.util.Objects.checkFromIndexSize($from, $size, $len)
 =>
-nbjavac.ObjectsWrapper.checkFromIndexSize($from, $size, $len)
+nbjavac.jdk8.ObjectsWrapper.checkFromIndexSize($from, $size, $len)
 ;;
 
 java.util.ServiceLoader :: inClass("com.sun.tools.doclint.DocLint")
 =>
-nbjavac.ServiceLoaderWrapper
+nbjavac.jdk8.ServiceLoaderWrapper
 ;;
 
 java.util.ServiceLoader :: inClass("com.sun.tools.javac.api.JavacTrees")
 =>
-nbjavac.ServiceLoaderWrapper
+nbjavac.jdk8.ServiceLoaderWrapper
 ;;
 
 $1.stripTrailing() :: $1 instanceof java.lang.String
@@ -161,22 +161,22 @@ $1.replaceAll("^\\p{javaWhitespace}+", "").replaceAll("\\p{javaWhitespace}+$", "
 
 $1.stripIndent() :: $1 instanceof java.lang.String
 =>
-nbjavac.StringWrapper.stripIndent($1)
+nbjavac.jdk8.StringWrapper.stripIndent($1)
 ;;
 
 $1.stripTrailing() //:: $1 instanceof java.lang.String
 =>
-nbjavac.StringWrapper.stripTrailing($1)
+nbjavac.jdk8.StringWrapper.stripTrailing($1)
 ;;
 
 $1.translateEscapes() :: $1 instanceof java.lang.String
 =>
-nbjavac.StringWrapper.translateEscapes($1)
+nbjavac.jdk8.StringWrapper.translateEscapes($1)
 ;;
 
 $1.isBlank() :: $1 instanceof java.lang.String
 =>
-nbjavac.StringWrapper.isBlank($1)
+nbjavac.jdk8.StringWrapper.isBlank($1)
 ;;
 
 $1.formatted($args$) :: $1 instanceof java.lang.String
@@ -191,12 +191,12 @@ $1.resolve("lib").resolve("jrt-fs.jar").toUri().toURL()
 
 java.nio.file.FileSystems.newFileSystem($path, $env, $classloader) :: $path instanceof java.nio.file.Path
 =>
-nbjavac.FileSystemsWrapper.newFileSystem($path, $env, $classloader)
+nbjavac.jdk8.FileSystemsWrapper.newFileSystem($path, $env, $classloader)
 ;;
 
 java.nio.file.FileSystems.newFileSystem($path, $env) :: $path instanceof java.nio.file.Path && $env instanceof java.util.Map && !inClass("com.sun.tools.javac.platform.JDKPlatformProvider")
 =>
-nbjavac.FileSystemsWrapper.newFileSystem($path, $env)
+nbjavac.jdk8.FileSystemsWrapper.newFileSystem($path, $env)
 ;;
 
 /*
@@ -212,7 +212,7 @@ String $v = "" + $ch;
 java.nio.file.Files.newDirectoryStream($a1)
 :: inClass("com.sun.tools.javac.platform.JDKPlatformProvider")
 =>
-nbjavac.VMWrapper.newDirectoryStream($a1)
+nbjavac.jdk21.JDK21VMWrapper.newDirectoryStream($a1)
 ;;
 
 $1.toList() :: $1 instanceof java.util.stream.Stream
@@ -306,5 +306,5 @@ new java.util.LinkedHashSet<>($map.keySet());
 
 java.util.Set.copyOf($1)
 =>
-nbjavac.CollectionsWrapper.copyOfSet($1)
+nbjavac.jdk8.CollectionsWrapper.copyOfSet($1)
 ;;

@@ -26,8 +26,8 @@
 @jdk.internal.javac.PreviewFeature($args$) => ;;
 @jdk.internal.javac.NoPreview => ;;
 
-jdk.internal.jmod.JmodFile => nbjavac.JmodFileWrapper;;
-jdk.internal.misc.VM => nbjavac.VMWrapper;;
+jdk.internal.jmod.JmodFile => nbjavac.jdk21.JmodFileWrapper;;
+jdk.internal.misc.VM => nbjavac.jdk21.JDK21VMWrapper;;
 
 java.lang.ClassLoader.getSystemClassLoader() :: !inClass("javax.tools.ToolProvider")
 => javax.tools.ToolProvider.class.getClassLoader();;
@@ -76,14 +76,14 @@ static java.nio.file.Path findCtSym() {
 }
 =>
 static java.nio.file.Path findCtSym() {
-    return nbjavac.VMWrapper.findCtSym()
+    return nbjavac.jdk21.JDK21VMWrapper.findCtSym()
 }
 ;;
 
 java.nio.file.FileSystems.newFileSystem($path, $a2)
 :: inClass("com.sun.tools.javac.platform.JDKPlatformProvider")
 =>
-nbjavac.VMWrapper.pathFs($path)
+nbjavac.jdk21.JDK21VMWrapper.pathFs($path)
 ;;
 
 //to eliminate imports:
@@ -214,4 +214,4 @@ java.lang.VirtualMachineError
 
 // JDK 23+
 
-java.lang.runtime.ExactConversionsSupport => nbjavac.ExactConversionsSupport;;
+java.lang.runtime.ExactConversionsSupport => nbjavac.jdk21.ExactConversionsSupport;;

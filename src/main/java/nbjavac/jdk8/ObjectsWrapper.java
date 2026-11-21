@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020, 2021, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,15 +22,24 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package nbjavac;
+package nbjavac.jdk8;
 
-import java.io.File;
-import java.net.URI;
-import java.nio.file.Path;
+import static java.util.Objects.requireNonNull;
 
-public class PathWrapper {
-    public static Path of(URI uri) {
-        //TODO: proper implementation:
-        return new File(uri).toPath();
+public class ObjectsWrapper {
+
+    public static <T> T requireNonNullElse(T value, T elseValue) {
+        if (value != null) {
+            return value;
+        }
+        requireNonNull(elseValue, "elseValue");
+        return elseValue;
+    }
+
+    public static int checkFromIndexSize(int fromIndex, int size, int length) {
+        if ((length | fromIndex | size) < 0 || size > length - fromIndex)
+            throw new IndexOutOfBoundsException("" + fromIndex + ", " + size + ", " + length);
+        return fromIndex;
     }
 }
+

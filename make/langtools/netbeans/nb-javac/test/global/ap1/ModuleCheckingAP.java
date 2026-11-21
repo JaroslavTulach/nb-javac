@@ -39,7 +39,7 @@ import javax.lang.model.element.QualifiedNameable;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.tools.StandardLocation;
-import nbjavac.ModuleWrapper;
+import nbjavac.jdk8.ModuleWrapper;
 
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 @SupportedAnnotationTypes("*")
