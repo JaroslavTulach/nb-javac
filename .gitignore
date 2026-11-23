@@ -2,7 +2,11 @@
 /dist/
 /jdk/
 /lib/
-/src/
+/src/generated/
+/src/java.base/
+/src/java.compiler/
+/src/jdk.compiler/
+/src/jackpot-done
 /jackpot.jar
 /.idea/
 /.vscode/

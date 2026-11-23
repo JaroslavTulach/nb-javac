@@ -11,7 +11,7 @@
     <!-- jdk.git.url and jdk.git.commit are defined by pom.xml -->
     <property name="root" location="../../../.."/>
     <property name="jdk.repo" location="${root}/jdk"/>
-    <property name="src.dir" location="${root}/src"/>
+    <property name="src.dir" location="${root}/src/generated/java"/>
     <property name="tools.dir" location="${root}/lib"/>
 
     <target name="-check-properties">
@@ -30,8 +30,32 @@
         <available property="jdk.is.available" file="${jdk.repo}"/>
     </target>
 
-    <target name="-check-jackpot.has.been.applied">
-        <available property="jackpot.has.been.applied" file="${src.dir}/jackpot-done"/>
+    <target name="-prepare-jackpot.marker">
+        <fail unless="jackpot.profile" message="Select a Jackpot profile, for example -Pjdk8+ or -Pjdk21+."/>
+        <fail unless="jackpot.hint.files" message="The selected Jackpot hint files are not configured."/>
+        <mkdir dir="${root}/target"/>
+        <property name="jackpot.combined.hint.file"
+                  location="${root}/target/nbjavac-${jackpot.profile}.hint"/>
+        <concat destfile="${jackpot.combined.hint.file}" fixlastline="yes">
+            <filelist dir="${root}/src/main/resources/META-INF/upgrade"
+                      files="${jackpot.hint.files}"/>
+        </concat>
+        <checksum file="${jackpot.combined.hint.file}" algorithm="SHA-256"
+                  property="jackpot.hint.checksum"/>
+        <property name="jackpot.marker.expected"
+                  value="${jackpot.profile}|${jdk.git.commit}|${jackpot.hint.checksum}"/>
+        <available property="jackpot.marker.exists" file="${src.dir}/jackpot-done"/>
+    </target>
+
+    <target name="-check-jackpot.marker" depends="-prepare-jackpot.marker" if="jackpot.marker.exists">
+        <loadfile property="jackpot.marker.actual" srcfile="${src.dir}/jackpot-done">
+            <filterchain>
+                <striplinebreaks/>
+            </filterchain>
+        </loadfile>
+        <condition property="jackpot.has.been.applied">
+            <equals arg1="${jackpot.marker.actual}" arg2="${jackpot.marker.expected}"/>
+        </condition>
     </target>
 
     <target name="-checkout-jdk" depends="-check-jdk.is.available" unless="jdk.is.available">
@@ -96,7 +120,7 @@
                 </fileset>
             </path>
         </pathconvert>
-        <copy file="${root}/target/nb-javac-${revision}.jar"
+        <copy file="${root}/target/${nbjavac.implementation.finalName}.jar"
               tofile="${netbeans.impl.jar}" overwrite="true"/>
         <copy file="${root}/target/nb-javac-${revision}-api.jar"
               tofile="${netbeans.api.jar}" overwrite="true"/>
@@ -136,9 +160,13 @@
         </java>
     </target>
 
-    <target name="jackpot" depends="init,-check-jackpot.has.been.applied" unless="jackpot.has.been.applied"
+    <target name="jackpot" depends="init,-check-jackpot.marker" unless="jackpot.has.been.applied"
             description="Copies the OpenJDK sources and applies the refactorings to them.">
         <delete dir="${src.dir}"/>
+        <delete dir="${root}/src/java.base"/>
+        <delete dir="${root}/src/java.compiler"/>
+        <delete dir="${root}/src/jdk.compiler"/>
+        <delete file="${root}/src/jackpot-done"/>
         <mkdir dir="${src.dir}"/>
         <copy todir="${src.dir}">
             <fileset dir="${jdk.repo}/src/">
@@ -169,15 +197,15 @@
                 </selector>
             </fileset>
             <filterchain>
-                 <replacestring from="package java.lang.runtime;" to="package nbjavac;"/>
+                 <replacestring from="package java.lang.runtime;" to="package nbjavac.jdk21;"/>
             </filterchain>
         </copy>
 
         <java fork="true" failonerror="true" classpath="${tools.dir}/jackpot.jar" classname="org.netbeans.modules.jackpot30.cmdline.Main">
             <arg value="-hint-file"/>
-            <arg value="${root}/make/langtools/netbeans/nb-javac/src/META-INF/upgrade/nbjavac.hint"/>
+            <arg value="${jackpot.combined.hint.file}"/>
             <arg value="-sourcepath"/>
-            <arg value="${root}/make/langtools/netbeans/nb-javac/src/:${src.dir}/jdk.compiler/share/classes/:${src.dir}/java.compiler/share/classes:${src.dir}/java.base/share/classes"/>
+            <arg value="${root}/src/main/java/:${src.dir}/jdk.compiler/share/classes/:${src.dir}/java.compiler/share/classes:${src.dir}/java.base/share/classes"/>
             <arg value="-source"/>
             <arg value="8"/>
             <arg value="--apply"/>
@@ -185,6 +213,6 @@
             <arg value="${src.dir}/java.compiler/share/classes"/>
             <arg value="${src.dir}/jdk.compiler/share/classes"/>
         </java>
-        <echo file="${src.dir}/jackpot-done">Jackpot done!</echo>
+        <echo file="${src.dir}/jackpot-done">${jackpot.marker.expected}</echo>
     </target>
 </project>

@@ -1,0 +1,310 @@
+/*
+ * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+java.util.Set.of($args$) => java.util.Collections.unmodifiableSet(new java.util.HashSet<>(java.util.Arrays.asList($args$)));;
+java.util.List.of($args$) => java.util.Collections.unmodifiableList(java.util.Arrays.asList($args$));;
+java.util.List.copyOf($list) => java.util.Collections.unmodifiableList(new java.util.ArrayList<>($list));;
+java.util.Map.of($k, $v) => java.util.Collections.unmodifiableMap(java.util.Collections.singletonMap($k, $v));;
+java.util.Map.of($k1, $v1, $k2, $v2) => nbjavac.jdk21.JDK21VMWrapper.toMap($k1, $v1, $k2, $v2);;
+
+//XXX: incorrect!
+java.lang.Runtime.version().feature() =>
+"1.8".equals(System.getProperty("java.specification.version")) ? 8 : Integer.parseInt(System.getProperty("java.specification.version"))
+;;
+
+
+@java.io.Serial => ;;
+@java.lang.Deprecated($arg1, $args$) => @java.lang.Deprecated;;
+
+
+$1.flip() :: $1 instanceof java.nio.ByteBuffer
+=>
+((ByteBuffer) $1.flip())
+;;
+
+$1.clear() :: $1 instanceof java.nio.ByteBuffer
+=>
+((ByteBuffer) $1.clear())
+;;
+
+$1.flip() :: $1 instanceof java.nio.CharBuffer && !parentMatches("$1.flip();")
+=>
+((CharBuffer) $1.flip())
+;;
+
+java.nio.file.Path.of($uri) :: $uri instanceof java.net.URI
+=>
+nbjavac.jdk8.PathWrapper.of($uri)
+;;
+
+java.lang.module.ModuleDescriptor
+=>
+nbjavac.jdk8.ModuleWrapper.ModuleDescriptor
+;;
+
+$class.getModule() :: $class instanceof java.lang.Class
+=>
+nbjavac.jdk8.ModuleWrapper.getModule($class)
+;;
+
+$cl.getUnnamedModule() :: $cl instanceof java.lang.ClassLoader
+=>
+nbjavac.jdk8.ModuleWrapper.getUnnamedModule($cl)
+;;
+
+java.lang.Runtime.Version => nbjavac.jdk8.RuntimeWR.Version;;
+
+java.lang.Module => nbjavac.jdk8.ModuleWrapper;;
+
+java.lang.module.ModuleFinder => nbjavac.jdk8.ModuleWrapper.ModuleFinder;;
+java.lang.ModuleLayer => nbjavac.jdk8.ModuleWrapper.ModuleLayer;;
+java.lang.module.Configuration => nbjavac.jdk8.ModuleWrapper.Configuration;;
+
+java.util.ServiceLoader.load($layer, $class) :: $layer instanceof java.lang.ModuleLayer && $class instanceof java.lang.Class
+=>
+nbjavac.jdk8.ServiceLoaderWrapper.load($layer, $class)
+;;
+
+java.util.ServiceLoader.load($class, $loader) :: $loader instanceof java.lang.ClassLoader && $class instanceof java.lang.Class && !inClass("com.sun.tools.doclint.DocLint") && !inClass("javax.tools.ToolProvider");
+=>
+nbjavac.jdk8.ServiceLoaderWrapper.loadWithClassLoader($class, $loader)
+;;
+
+java.util.ServiceLoader.load($class, $loader) :: $loader instanceof java.lang.ClassLoader && $class instanceof java.lang.Class && inClass("javax.tools.ToolProvider");
+=>
+nbjavac.jdk8.ServiceLoaderWrapper.loadTool($class)
+;;
+
+$1.isEmpty() :: $1 instanceof java.util.Optional
+=>
+!$1.isPresent()
+;;
+
+$1.orElseThrow() :: $1 instanceof java.util.Optional
+=>
+$1.get()
+;;
+
+java.util.Optional.of($p1).map($p2).ifPresentOrElse($2, $3)
+=>
+nbjavac.jdk21.JDK21VMWrapper.optionalIfPresentOrElse(java.util.Optional.of($p1).map($p2), $2, $3)
+;;
+
+// XXX: reported as https://github.com/apache/netbeans-jackpot30/issues/38
+//should be:
+//$1.stream() :: $1 instanceof java.util.Optional
+//=>
+//nbjavac.jdk8.CollectionsWrapper.optional2Stream($1)
+//;;
+//but that does not work in DeferredLintHandler:
+java.util.Optional.of($p1).map($p2).stream()
+=>
+nbjavac.jdk8.CollectionsWrapper.optional2Stream(java.util.Optional.of($p1).map($p2))
+;;
+
+java.util.Objects.requireNonNullElse($obj, $def)
+=>
+nbjavac.jdk8.ObjectsWrapper.requireNonNullElse($obj, $def)
+;;
+
+java.util.Objects.checkFromIndexSize($from, $size, $len)
+=>
+nbjavac.jdk8.ObjectsWrapper.checkFromIndexSize($from, $size, $len)
+;;
+
+java.util.ServiceLoader :: inClass("com.sun.tools.doclint.DocLint")
+=>
+nbjavac.jdk8.ServiceLoaderWrapper
+;;
+
+java.util.ServiceLoader :: inClass("com.sun.tools.javac.api.JavacTrees")
+=>
+nbjavac.jdk8.ServiceLoaderWrapper
+;;
+
+$1.stripTrailing() :: $1 instanceof java.lang.String
+=>
+$1.replaceAll("\\p{javaWhitespace}+$", "")
+;;
+
+$1.stripLeading() :: $1 instanceof java.lang.String
+=>
+$1.replaceAll("^\\p{javaWhitespace}+", "")
+;;
+
+$1.strip() :: $1 instanceof java.lang.String
+=>
+$1.replaceAll("^\\p{javaWhitespace}+", "").replaceAll("\\p{javaWhitespace}+$", "")
+;;
+
+$1.stripIndent() :: $1 instanceof java.lang.String
+=>
+nbjavac.jdk8.StringWrapper.stripIndent($1)
+;;
+
+$1.stripTrailing() //:: $1 instanceof java.lang.String
+=>
+nbjavac.jdk8.StringWrapper.stripTrailing($1)
+;;
+
+$1.translateEscapes() :: $1 instanceof java.lang.String
+=>
+nbjavac.jdk8.StringWrapper.translateEscapes($1)
+;;
+
+$1.isBlank() :: $1 instanceof java.lang.String
+=>
+nbjavac.jdk8.StringWrapper.isBlank($1)
+;;
+
+$1.formatted($args$) :: $1 instanceof java.lang.String
+=>
+String.format($1, $args$)
+;;
+
+$1.resolve("jrt-fs.jar").toUri().toURL() :: $1 instanceof java.nio.file.Path
+=>
+$1.resolve("lib").resolve("jrt-fs.jar").toUri().toURL()
+;;
+
+java.nio.file.FileSystems.newFileSystem($path, $env, $classloader) :: $path instanceof java.nio.file.Path
+=>
+nbjavac.jdk8.FileSystemsWrapper.newFileSystem($path, $env, $classloader)
+;;
+
+java.nio.file.FileSystems.newFileSystem($path, $env) :: $path instanceof java.nio.file.Path && $env instanceof java.util.Map && !inClass("com.sun.tools.javac.platform.JDKPlatformProvider")
+=>
+nbjavac.jdk8.FileSystemsWrapper.newFileSystem($path, $env)
+;;
+
+/*
+String $v = Character.toString($ch); :: $ch instanceof char
+=>
+if (!Character.isJavaIdentifierPart($ch)) {
+    continue;
+}
+String $v = "" + $ch;
+;;
+*/
+
+java.nio.file.Files.newDirectoryStream($a1)
+:: inClass("com.sun.tools.javac.platform.JDKPlatformProvider")
+=>
+nbjavac.jdk21.JDK21VMWrapper.newDirectoryStream($a1)
+;;
+
+$1.toList() :: $1 instanceof java.util.stream.Stream
+=>
+$1.collect(java.util.stream.Collectors.toList())
+;;
+
+java.util.Arrays.stream($1).map($2).toList()
+=>
+java.util.Arrays.stream($1).map($2).collect(java.util.stream.Collectors.toList())
+;;
+
+//to eliminate imports:
+java.io.Serial
+=>
+java.lang.VirtualMachineError
+;;
+
+$cs.isEmpty() :: $cs instanceof java.lang.CharSequence
+=>
+($cs.length() == 0)
+;;
+
+$coll.toArray($type[]::new) :: inClass("com.sun.tools.javac.comp.Flow")
+=>
+$coll.toArray(new $type[0])
+;;
+
+$coll.toArray($expr) :: inClass("com.sun.tools.javac.comp.Flow") && containsAny($expr, "new com.sun.tools.javac.code.Type[$s]")
+=>
+$coll.toArray(new com.sun.tools.javac.code.Type[0])
+;;
+
+$coll.toArray($expr) :: inClass("com.sun.tools.javac.util.Log") && containsAny($expr, "new com.sun.tools.javac.util.JCDiagnostic[$s]")
+=>
+$coll.toArray(new com.sun.tools.javac.util.JCDiagnostic[0])
+;;
+
+$coll.toArray($type[]::new) :: inClass("com.sun.tools.javac.comp.ExhaustivenessComputer")
+=>
+$coll.toArray(new $type[0])
+;;
+
+$coll.toArray($expr) :: inClass("com.sun.tools.javac.comp.ExhaustivenessComputer") && containsAny($expr, "new com.sun.tools.javac.code.Type[$s]")
+=>
+$coll.toArray(new com.sun.tools.javac.code.Type[0])
+;;
+
+$coll.toArray($expr) :: inClass("com.sun.tools.javac.file.Locations") && containsAny($expr, "java.io.Closeable[]")
+=>
+$coll.toArray(new java.io.Closeable[0])
+;;
+
+$stream.flatMap(java.util.Optional::stream) :: $stream instanceof java.util.stream.Stream
+=>
+$stream.flatMap(opt$$ -> opt$$.isPresent() ? Stream.of(opt$$.get()) : Stream.empty())
+;;
+
+$list.getLast() :: $list instanceof java.util.List
+=>
+$list.get($list.size() - 1)
+;;
+
+$list.removeLast() :: $list instanceof java.util.List
+=>
+$list.remove($list.size() - 1)
+;;
+
+java.util.SequencedSet => java.util.LinkedHashSet;;
+$mods$ $type<$T> fvs = $init$; :: inClass("com.sun.tools.javac.comp.CaptureScanner")
+=>
+$mods$ java.util.LinkedHashSet<$T> fvs = $init$;
+;;
+
+java.util.SequencedMap => java.util.Map;;
+
+java.util.Collections.unmodifiableSequencedMap($map)
+=>
+java.util.Collections.unmodifiableMap($map)
+;;
+
+$list.getFirst() :: $list instanceof java.util.List
+=>
+$list.get(0)
+;;
+
+$map.sequencedKeySet() :: $map instanceof java.util.SequencedMap
+=>
+new java.util.LinkedHashSet<>($map.keySet());
+;;
+
+java.util.Set.copyOf($1)
+=>
+nbjavac.jdk8.CollectionsWrapper.copyOfSet($1)
+;;
