@@ -52,7 +52,7 @@
     <revision>${jdk.git.commit}</revision>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-    <!-- deploying is enabled by the release profile -->
+    <!-- releases are assembled from local installs -->
     <maven.deploy.skip>true</maven.deploy.skip>
     <nbjavac.tools.dir>${project.basedir}/lib</nbjavac.tools.dir>
     <nbjavac.ant.dir>${project.basedir}/make/langtools/netbeans/nb-javac</nbjavac.ant.dir>
@@ -252,6 +252,11 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>net.nicoulaj.maven.plugins</groupId>
+        <artifactId>checksum-maven-plugin</artifactId>
+        <version>1.11</version>
       </plugin>
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
@@ -673,14 +678,10 @@
     </profile>
     <profile>
       <!--
-        Creates the Javadoc jar and signs artifacts during verify. See README.md
-        for assembling and publishing a bundle containing both profiles.
+        Creates the Javadoc jar, signs artifacts, and generates checksums. See
+        README.md for publishing a bundle containing both profiles.
       -->
       <id>release</id>
-      <properties>
-        <maven.deploy.skip>false</maven.deploy.skip>
-        <central.skipUpload>false</central.skipUpload>
-      </properties>
       <build>
         <plugins>
           <plugin>
@@ -720,15 +721,57 @@
             </executions>
           </plugin>
           <plugin>
-            <!-- the deploy phase uploads a bundle to the Central Portal; it has to be published manually there -->
-            <groupId>org.sonatype.central</groupId>
-            <artifactId>central-publishing-maven-plugin</artifactId>
-            <version>0.12.0</version>
-            <extensions>true</extensions>
-            <configuration>
-              <publishingServerId>central</publishingServerId>
-              <skipUpload>${central.skipUpload}</skipUpload>
-            </configuration>
+            <groupId>net.nicoulaj.maven.plugins</groupId>
+            <artifactId>checksum-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>checksum-installed-artifacts</id>
+                <phase>install</phase>
+                <goals>
+                  <goal>files</goal>
+                </goals>
+                <configuration>
+                  <fileSets>
+                    <fileSet>
+                      <directory>${settings.localRepository}/com/dukescript/nbjavac/${project.artifactId}/${project.version}</directory>
+                      <includes>
+                        <include>*.jar</include>
+                        <include>*.pom</include>
+                      </includes>
+                    </fileSet>
+                  </fileSets>
+                  <individualFilesOutputDirectory>${project.build.directory}/release-checksums</individualFilesOutputDirectory>
+                  <csvSummary>false</csvSummary>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <artifactId>maven-resources-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>install-checksums</id>
+                <phase>install</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${settings.localRepository}/com/dukescript/nbjavac/${project.artifactId}/${project.version}</outputDirectory>
+                  <overwrite>true</overwrite>
+                  <resources>
+                    <resource>
+                      <directory>${project.build.directory}/release-checksums</directory>
+                      <includes>
+                        <include>${project.artifactId}-${project.version}*.jar.md5</include>
+                        <include>${project.artifactId}-${project.version}*.jar.sha1</include>
+                        <include>${project.artifactId}-${project.version}.pom.md5</include>
+                        <include>${project.artifactId}-${project.version}.pom.sha1</include>
+                      </includes>
+                    </resource>
+                  </resources>
+                </configuration>
+              </execution>
+            </executions>
           </plugin>
         </plugins>
       </build>

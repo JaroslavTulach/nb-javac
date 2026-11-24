@@ -84,19 +84,17 @@ profiles together:
    the JDK 8+ implementation, shared API, sources, Javadoc and POM. The second
    adds the `jdk21` implementation and `jdk21-sources` without replacing the
    shared API, whose JDK 8+ build is needed for older runtimes. Both commands
-   also install signatures; neither uploads anything.
+   also install signatures and generate MD5 and SHA-1 checksums; neither uploads anything.
 
 3. Package the installed files as a Central bundle. This example uses the
-   default local Maven repository; change the directory if necessary. If
-   `revision` was overridden in step 2, use the same override when resolving
-   `VERSION`. The commands verify the signatures and write Central's required
-   MD5 and SHA-1 checksums into the local repository.
+   default local Maven repository and version `jdk-28+25`; adjust them if
+   necessary. Use a new ZIP filename, as `zip` updates an existing archive.
    ```bash
-   $ cd ~/.m2/repository
-   repository$ zip -r "$HOME/central-bundle.zip" "com/dukescript/nbjavac/nb-javac-jdk28*"
+   cd ~/.m2/repository
+   zip -r "$HOME/central-bundle.zip" com/dukescript/nbjavac/nb-javac/jdk-28+25
    ```
-   The ZIP command refuses to overwrite an existing bundle. Only the selected
-   release files are included, not cached dependencies or local metadata.
+   Only the selected release is included, not cached dependencies or local
+   repository metadata.
 
 4. Upload `~/central-bundle.zip` through the
    [Central Portal](https://central.sonatype.org/publish/publish-portal-upload/),
