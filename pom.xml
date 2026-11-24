@@ -48,7 +48,7 @@
   <properties>
     <!-- OpenJDK sources to build from, the version of the artifacts follows the commit/tag -->
     <jdk.git.url>https://github.com/openjdk/jdk</jdk.git.url>
-    <jdk.git.commit>jdk-28+23</jdk.git.commit>
+    <jdk.git.commit>jdk-28+25</jdk.git.commit>
     <revision>${jdk.git.commit}</revision>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
