@@ -343,7 +343,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>3.4.2</version>
+        <version>3.5.0</version>
         <configuration>
           <archive>
             <addMavenDescriptor>false</addMavenDescriptor>
@@ -351,7 +351,7 @@
         </configuration>
         <executions>
           <execution>
-            <!-- the implementation jar is the main artifact -->
+            <!-- the implementation jar is the main artifact, or a classified attachment for jdk21+ -->
             <id>default-jar</id>
             <configuration>
               <finalName>${nbjavac.implementation.finalName}</finalName>
@@ -533,12 +533,39 @@
               <execution>
                 <id>default-jar</id>
                 <configuration>
+                  <finalName>${project.build.finalName}</finalName>
+                  <classifier>jdk21</classifier>
                   <excludes>
                     <exclude>nbjavac/jdk8/**</exclude>
                   </excludes>
                 </configuration>
               </execution>
+              <execution>
+                <id>sources-jar</id>
+                <configuration>
+                  <classifier>jdk21-sources</classifier>
+                </configuration>
+              </execution>
+              <execution>
+                <id>api-jar</id>
+                <configuration>
+                  <attach>false</attach>
+                </configuration>
+              </execution>
+              <execution>
+                <id>javadoc-jar</id>
+                <configuration>
+                  <attach>false</attach>
+                </configuration>
+              </execution>
             </executions>
+          </plugin>
+          <plugin>
+            <artifactId>maven-install-plugin</artifactId>
+            <version>3.1.4</version>
+            <configuration>
+              <allowIncompleteProjects>true</allowIncompleteProjects>
+            </configuration>
           </plugin>
           <plugin>
             <artifactId>maven-compiler-plugin</artifactId>
@@ -646,11 +673,8 @@
     </profile>
     <profile>
       <!--
-        Signs the artifacts and uploads them directly to the Maven Central by
-          mvn clean deploy -DskipTests -Prelease
-        The credentials (a Central Portal user token) are expected in settings.xml
-        as the server with id "central". Use -Dcentral.skipUpload=true to only create
-        the bundle target/central-publishing/central-bundle.zip without uploading it.
+        Creates the Javadoc jar and signs artifacts during verify. See README.md
+        for assembling and publishing a bundle containing both profiles.
       -->
       <id>release</id>
       <properties>

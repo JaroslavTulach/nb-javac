@@ -150,7 +150,7 @@ jobs:
           cp "profiles/jdk8+/nb-javac-${version}-sources.jar" "$repository/"
 
           cp "profiles/jdk21+/nb-javac-${version}-jdk21.jar" "$repository/nb-javac-${version}-jdk21.jar"
-          cp "profiles/jdk21+/nb-javac-${version}-sources.jar" "$repository/nb-javac-${version}-jdk21-sources.jar"
+          cp "profiles/jdk21+/nb-javac-${version}-jdk21-sources.jar" "$repository/"
 
           (
             cd maven-repository

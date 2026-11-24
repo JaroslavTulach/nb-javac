@@ -36,7 +36,7 @@ the standard Maven lifecycle phases:
 | `compile` | compiles the sources to the appropriate target Java bytecode |
 | `test` | compiles and runs the tests with `surefire` (skip with `-DskipTests`, run one with `-Dtest=StringWrapperTest`) |
 | `package` | creates the `api`, implementation and `sources` jars and checks their consistency |
-| `deploy` | with the `release` profile signs and deploys the artifacts (see the [README](README.md)) |
+| `verify` | with the `release` profile signs the artifacts (see the [README](README.md)) |
 
 Any `-Dkey=value` given to `mvn` is passed to the build. Read below to control individual steps of the build.
 
@@ -116,16 +116,19 @@ $ JAVA_HOME=/jdk-25/ mvn clean package
 ```
 
 The default `jdk8+` profile produces `nb-javac-<version>.jar`; the `jdk21+`
-profile produces `nb-javac-<version>-jdk21.jar`. Both produce the shared
+profile produces `nb-javac-<version>-jdk21.jar`. Both produce an
 `nb-javac-<version>-api.jar` in `./target/`.
+The JDK 21+ sources JAR is named `nb-javac-<version>-jdk21-sources.jar`.
+On `install`, only the JDK 8+ API JAR is installed as the shared `api`
+artifact; the JDK 21+ API is built for testing but is not attached.
 
 ### Maven repository staging in CI
 
 After both compatibility profiles pass their runtime tests, GitHub Actions
 uploads a `maven-repository-<run-id>` artifact with a Maven-layout directory
 tree. The unclassified artifacts are the `jdk8+` build; the `jdk21+`
-implementation and sources are staged with `jdk21` and `jdk21-sources`
-classifiers. The `jdk8+` multi-release API JAR is staged once, unclassified,
+implementation and sources have `jdk21` and `jdk21-sources` classifiers.
+The `jdk8+` multi-release API JAR is staged once with the `api` classifier,
 for both implementations.
 
 The API JAR is shared because the public and protected signatures are the same
