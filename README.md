@@ -56,50 +56,49 @@ sanity test the generated Javac on JDK8 (in case of `jdk8+` profile being used):
 ```bash
 $ JAVA_HOME=/jdk-8/ mvn surefire:test
 ```
-Additional `nb-javac-*-sources.jar` file with sources is created
-in the `./target/` directory by the `package` phase as well.
+The `package` phase also creates a sources JAR: `nb-javac-*-sources.jar`
+for `jdk8+`, or `nb-javac-*-jdk21-sources.jar` for `jdk21+`.
 
 There is one shared API JAR and two implementation JARs: one for `jdk8+` and
 one for `jdk21+`.
 
-# Publishing to maven central
+# Publishing to Maven Central
 
-The artifacts (`com.dukescript.nbjavac:nb-javac`, the version is the `jdk.git.commit`, see [BUILD.md](BUILD.md))
-are uploaded directly to the [Central Portal](https://central.sonatype.com/) by `mvn deploy`
-with the `release` profile. The profile builds the Javadoc jar Central requires, signs the
-artifacts (the main jar, the `api`, `sources` and `javadoc` jars and the pom) with `gpg` and
-uploads them with the [central-publishing-maven-plugin](https://central.sonatype.org/publish/publish-portal-maven/).
+The artifacts use `com.dukescript.nbjavac:nb-javac` and the version defaults
+to `jdk.git.commit` (see [BUILD.md](BUILD.md)). To publish both implementation
+profiles together:
 
-1. Get an account at https://central.sonatype.com/, register the `com.dukescript.nbjavac` namespace
-   and [generate a user token](https://central.sonatype.org/publish/generate-portal-token/).
+1. Get an account at the [Central Portal](https://central.sonatype.com/) and
+   register the `com.dukescript.nbjavac` namespace. Make a GPG signing key
+   available and publish its public key as described in
+   [Central's signing instructions](https://central.sonatype.org/publish/requirements/gpg/).
+   The [maven-gpg-plugin](https://maven.apache.org/plugins/maven-gpg-plugin/sign-mojo.html)
+   selects the key, for example using `-Dgpg.keyname=...`.
 
-2. Configure the maven installation so that the token is made available
-   for the server with the id `central`, e.g. in `~/.m2/settings.xml`:
-   ```xml
-   <settings>
-     <servers>
-       <server>
-         <id>central</id>
-         <username>your token username</username>
-         <password>your token password</password>
-       </server>
-     </servers>
-   </settings>
+2. With JDK 25, install and sign both profiles, in this order:
+   ```bash
+   JAVA_HOME=/jdk-25/ mvn clean install -Prelease
+   JAVA_HOME=/jdk-25/ mvn clean install -Prelease,jdk21+
    ```
+   Use the same version and signing key for both commands. The first installs
+   the JDK 8+ implementation, shared API, sources, Javadoc and POM. The second
+   adds the `jdk21` implementation and `jdk21-sources` without replacing the
+   shared API, whose JDK 8+ build is needed for older runtimes. Both commands
+   also install signatures and generate MD5 and SHA-1 checksums; neither uploads anything.
 
-3. Make a `gpg` key available. The key is selected by the usual
-   [maven-gpg-plugin](https://maven.apache.org/plugins/maven-gpg-plugin/sign-mojo.html)
-   properties, e.g. `-Dgpg.keyname=...`.
-
-4. Run
+3. Package the installed files as a Central bundle. This example uses the
+   default local Maven repository and version `jdk-28+25`; adjust them if
+   necessary. Use a new ZIP filename, as `zip` updates an existing archive.
+   ```bash
+   cd ~/.m2/repository
+   zip -r "$HOME/central-bundle.zip" com/dukescript/nbjavac/nb-javac/jdk-28+25
    ```
-   JAVA_HOME=/jdk-25/ mvn clean deploy -DskipTests -Prelease
-   ```
-   The build uploads the bundle and waits until Central validates it. The deployment then
-   has to be released manually at https://central.sonatype.com/publishing/deployments
+   Only the selected release is included, not cached dependencies or local
+   repository metadata.
 
-To only create the bundle without uploading it (e.g. to upload it by other tools),
-add `-Dcentral.skipUpload=true`. The bundle is then in `target/central-publishing/central-bundle.zip`.
+4. Upload `~/central-bundle.zip` through the
+   [Central Portal](https://central.sonatype.org/publish/publish-portal-upload/),
+   wait for validation, and release the deployment in the portal.
 
 # Install into a NetBeans distribution
 
