@@ -57,7 +57,7 @@ jobs:
           if-no-files-found: error
           retention-days: 1
       - name: Build patched JDK 25
-        run: ./build-jdk.sh
+        run: ./src/test/script/build-jdk.sh
 
   test:
     name: "Test ${{ matrix.module }} on JDK ${{ matrix.java }}"

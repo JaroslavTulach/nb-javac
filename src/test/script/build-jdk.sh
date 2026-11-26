@@ -1,5 +1,8 @@
-#/bin/bash
+#!/bin/bash
 set -e
+
+script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+cd "$script_dir/../../.."
 
 if [ "x$JAVA_HOME_VERSION" == "x" ]; then
   if ! [ -f $JAVA_HOME/bin/javac ]; then
@@ -31,7 +34,7 @@ mkdir -p build/test
 mkdir -p build/test/modules
 cp $JAVA_HOME_VERSION/jmods/* build/test/modules
 #clear ModuleHashes on java.base:
-$JAVA_HOME_VERSION/bin/java --add-modules jdk.jdeps --add-exports jdk.jdeps/com.sun.tools.classfile=ALL-UNNAMED StripModuleHashes.java $JAVA_HOME_VERSION/jmods/java.base.jmod build/test/modules/java.base.jmod
+$JAVA_HOME_VERSION/bin/java --add-modules jdk.jdeps --add-exports jdk.jdeps/com.sun.tools.classfile=ALL-UNNAMED "$script_dir/StripModuleHashes.java" $JAVA_HOME_VERSION/jmods/java.base.jmod build/test/modules/java.base.jmod
 
 #prepare:
 
@@ -42,7 +45,7 @@ mkdir -p build/test/src/java.compiler
 
 cp jdk/src/java.compiler/share/classes/module-info.java build/test/src/java.compiler
 
-patch -R build/test/src/java.compiler/module-info.java temporary-patches/test-java.compiler
+patch -R build/test/src/java.compiler/module-info.java "$script_dir/temporary-patches/test-java.compiler"
 
 mkdir -p build/test/out/java.compiler
 cp -r code/target/classes/javax build/test/out/java.compiler/
@@ -54,7 +57,7 @@ rm build/test/modules/jdk.compiler.jmod
 mkdir -p build/test/src/jdk.compiler
 cp jdk/src/jdk.compiler/share/classes/module-info.java build/test/src/jdk.compiler
 
-patch build/test/src/jdk.compiler/module-info.java temporary-patches/test-jdk.compiler
+patch build/test/src/jdk.compiler/module-info.java "$script_dir/temporary-patches/test-jdk.compiler"
 
 mkdir -p build/test/out/jdk.compiler
 mkdir -p build/test/out/jdk.compiler/com/sun/source
