@@ -147,6 +147,13 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
         <version>3.8.1</version>
+        <dependencies>
+          <dependency>
+            <groupId>com.dukescript.nbjavac</groupId>
+            <artifactId>nb-javac-ctsym</artifactId>
+            <version>${project.version}</version>
+          </dependency>
+        </dependencies>
         <configuration>
           <outputDirectory>${nbjavac.tools.dir}</outputDirectory>
           <artifactItems>
@@ -197,9 +204,9 @@
               <includes>META-INF/ct*/**</includes>
               <artifactItems>
                 <artifactItem>
-                  <groupId>org.frgaal</groupId>
-                  <artifactId>compiler</artifactId>
-                  <version>25.0.0</version>
+                  <groupId>com.dukescript.nbjavac</groupId>
+                  <artifactId>nb-javac-ctsym</artifactId>
+                  <version>${project.version}</version>
                 </artifactItem>
               </artifactItems>
             </configuration>
@@ -452,6 +459,7 @@
           <systemPropertyVariables>
             <nbjavac.api.jar>${project.build.directory}/${project.build.finalName}-api.jar</nbjavac.api.jar>
             <nbjavac.implementation.jar>${project.build.directory}/${nbjavac.implementation.finalName}.jar</nbjavac.implementation.jar>
+            <nbjavac.ctsym.jar>${nbjavac.root}/ctsym/target/nb-javac-ctsym-${project.version}.jar</nbjavac.ctsym.jar>
             <nbjavac.profile>${jackpot.profile}</nbjavac.profile>
           </systemPropertyVariables>
         </configuration>

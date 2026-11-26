@@ -57,4 +57,38 @@ public class ImplJarContentIT {
             }
         }
     }
+
+    @Test
+    public void containsAllCtSymData() throws IOException {
+        String implPath = System.getProperty("nbjavac.implementation.jar");
+        String ctSymPath = System.getProperty("nbjavac.ctsym.jar");
+        assertNotNull("Failsafe must set the implementation JAR path", implPath);
+        assertNotNull("Failsafe must set the ct.sym JAR path", ctSymPath);
+
+        try (JarFile impl = new JarFile(implPath); JarFile ctSym = new JarFile(ctSymPath)) {
+            int ctSymEntries = 0;
+            Enumeration<JarEntry> entries = ctSym.entries();
+            while (entries.hasMoreElements()) {
+                JarEntry entry = entries.nextElement();
+                if (entry.isDirectory() || !entry.getName().startsWith("META-INF/ct")) {
+                    continue;
+                }
+                JarEntry bundled = impl.getJarEntry(entry.getName());
+                assertNotNull("Missing ct.sym entry: " + entry.getName(), bundled);
+                assertEquals("Changed ct.sym entry: " + entry.getName(), entry.getCrc(), bundled.getCrc());
+                assertEquals("Changed ct.sym entry size: " + entry.getName(), entry.getSize(), bundled.getSize());
+                ctSymEntries++;
+            }
+            assertTrue("ct.sym JAR contains no symbol data", ctSymEntries > 0);
+            int bundledEntries = 0;
+            entries = impl.entries();
+            while (entries.hasMoreElements()) {
+                JarEntry entry = entries.nextElement();
+                if (!entry.isDirectory() && entry.getName().startsWith("META-INF/ct")) {
+                    bundledEntries++;
+                }
+            }
+            assertEquals("Unexpected bundled ct.sym entries", ctSymEntries, bundledEntries);
+        }
+    }
 }

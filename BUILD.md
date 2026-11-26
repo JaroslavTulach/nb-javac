@@ -38,13 +38,13 @@ the standard Maven lifecycle phases:
 | `package` | creates the `api`, implementation and `sources` jars and checks their consistency |
 | `verify` | with the `release` profile signs the artifacts (see the [README](README.md)) |
 
-The root `pom.xml` aggregates the `code` module, which retains the
+The root `pom.xml` aggregates the `ctsym` and `code` modules. `code` retains the
 `com.dukescript.nbjavac:nb-javac` artifact. Sources remain in the root `src`
 tree; module build output is in `code/target`.
 
-The next step is a `ctsym` module that repackages the `META-INF/ct*` data
-currently unpacked from `org.frgaal:compiler`. The code module can then use
-that artifact while preserving the existing implementation JAR contents.
+The `ctsym` module repackages `META-INF/ct*` data from `org.frgaal:compiler`
+into `ctsym/target/nb-javac-ctsym-<version>.jar`. The code module unpacks
+that JAR into the implementation, so its runtime layout remains unchanged.
 
 Any `-Dkey=value` given to `mvn` is passed to the build. Read below to control individual steps of the build.
 
