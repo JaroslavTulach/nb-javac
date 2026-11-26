@@ -7,11 +7,11 @@
     <groupId>com.dukescript.nbjavac</groupId>
     <artifactId>nb-javac-runtime-parent</artifactId>
     <version>${revision}</version>
-    <relativePath>../runtime/pom.xml</relativePath>
   </parent>
   <artifactId>nb-javac-run-on-jdk8</artifactId>
   <name>nb-javac for JDK 8+</name>
   <properties>
+    <nbjavac.root>${project.basedir}/../..</nbjavac.root>
     <runtime.target>1.8</runtime.target>
     <jackpot.profile>jdk8+</jackpot.profile>
     <jackpot.hint.files>nbjavac-jdk21.hint,nbjavac.hint</jackpot.hint.files>

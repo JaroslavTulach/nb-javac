@@ -11,6 +11,10 @@
   <artifactId>nb-javac-runtime-parent</artifactId>
   <packaging>pom</packaging>
   <name>nb-javac runtime build</name>
+  <modules>
+    <module>run-on-jdk8</module>
+    <module>run-on-jdk21</module>
+  </modules>
 
   <properties>
     <nbjavac.root>${project.basedir}/..</nbjavac.root>

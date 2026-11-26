@@ -32,8 +32,8 @@ the standard Maven lifecycle phases:
 | `package` | creates the shared API, both implementation and sources jars, and checks their consistency |
 | `verify` | with the `release` profile signs the artifacts (see the [README](README.md)) |
 
-The root `pom.xml` aggregates `ctsym`, `api`, the shared `runtime` build,
-`run-on-jdk8`, `run-on-jdk21`, and `code`. The runtime modules compile and
+The root `pom.xml` aggregates `ctsym`, `api`, `runtime`, and `code`.
+The `runtime` project aggregates `run-on-jdk8` and `run-on-jdk21`, which compile and
 test the two implementations; `code` retains the
 `com.dukescript.nbjavac:nb-javac` artifact and assembles their JARs in
 `code/target`.
@@ -93,8 +93,8 @@ generates both:
 $ JAVA_HOME=/jdk-25/ mvn generate-sources
 ```
 
-This step copies the `javac` sources into `run-on-jdk8/target/generated/java`
-and `run-on-jdk21/target/generated/java`, then applies the respective
+This step copies the `javac` sources into `runtime/run-on-jdk8/target/generated/java`
+and `runtime/run-on-jdk21/target/generated/java`, then applies the respective
 transformations. Each `jackpot-done` marker records the profile, OpenJDK
 commit, and hint checksum. The API module also generates its JDK 8-compatible
 sources in `src/generated/java`. Project-owned helpers live in `src/main/java`.
@@ -157,7 +157,7 @@ $ netbeans --open .
 and you should be able to debug a test (for example `StringWrapperTest`) with following command line:
 
 ```bash
-$ JAVA_HOME=/jdk-8/ mvn -pl run-on-jdk8 surefire:test -Dtest=StringWrapperTest -Dmaven.surefire.debug
+$ JAVA_HOME=/jdk-8/ mvn -pl runtime/run-on-jdk8 surefire:test -Dtest=StringWrapperTest -Dmaven.surefire.debug
 ```
 
 The test JVM waits for a debugger on port 5005.

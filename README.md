@@ -43,8 +43,8 @@ their sources JARs in `./code/target/`.
 
 To test the prebuilt implementations on their target JDKs:
 ```bash
-$ JAVA_HOME=/jdk-8/ mvn -pl run-on-jdk8 surefire:test
-$ JAVA_HOME=/jdk-21/ mvn -pl run-on-jdk21 surefire:test
+$ JAVA_HOME=/jdk-8/ mvn -pl runtime/run-on-jdk8 surefire:test
+$ JAVA_HOME=/jdk-21/ mvn -pl runtime/run-on-jdk21 surefire:test
 ```
 
 # Publishing to Maven Central

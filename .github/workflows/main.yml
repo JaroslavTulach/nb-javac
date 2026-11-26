@@ -43,8 +43,8 @@ jobs:
         with:
           name: compiled-run-on-jdk8
           path: |
-            run-on-jdk8/target/classes/
-            run-on-jdk8/target/test-classes/
+            runtime/run-on-jdk8/target/classes/
+            runtime/run-on-jdk8/target/test-classes/
           if-no-files-found: error
           retention-days: 1
       - name: Upload JDK 21+ compiled classes
@@ -52,8 +52,8 @@ jobs:
         with:
           name: compiled-run-on-jdk21
           path: |
-            run-on-jdk21/target/classes/
-            run-on-jdk21/target/test-classes/
+            runtime/run-on-jdk21/target/classes/
+            runtime/run-on-jdk21/target/test-classes/
           if-no-files-found: error
           retention-days: 1
       - name: Build patched JDK 25
@@ -92,14 +92,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: compiled-${{ matrix.module }}
-          path: ${{ matrix.module }}/target/
+          path: runtime/${{ matrix.module }}/target/
       - name: Download published JARs
         uses: actions/download-artifact@v4
         with:
           name: maven-input
           path: maven-staging/
       - name: Run tests on prebuilt classes
-        run: mvn -B -pl ${{ matrix.module }} surefire:test
+        run: mvn -B -pl runtime/${{ matrix.module }} surefire:test
       - name: Test published API and implementation JARs
         shell: bash
         run: |
@@ -114,7 +114,7 @@ jobs:
           fi
           junit="$HOME/.m2/repository/junit/junit/4.12/junit-4.12.jar"
           hamcrest="$HOME/.m2/repository/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar"
-          tests="${{ matrix.module }}/target/test-classes:$junit:$hamcrest"
+          tests="runtime/${{ matrix.module }}/target/test-classes:$junit:$hamcrest"
           if [[ "${{ matrix.java }}" == "8" ]]; then
             java -Xbootclasspath/p:"$api_jar:$impl" -cp "$tests" org.junit.runner.JUnitCore com.sun.source.util.TreesTest com.sun.tools.javac.parser.JavacParserTest
           else

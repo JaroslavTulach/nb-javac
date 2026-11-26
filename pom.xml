@@ -21,8 +21,6 @@
     <module>ctsym</module>
     <module>api</module>
     <module>runtime</module>
-    <module>run-on-jdk8</module>
-    <module>run-on-jdk21</module>
     <module>code</module>
   </modules>
   <build>
