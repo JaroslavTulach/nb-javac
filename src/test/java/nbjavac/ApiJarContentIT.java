@@ -41,44 +41,44 @@ public class ApiJarContentIT {
                     continue;
                 }
 
-                @Test
-                public void publishesModuleJarWithMatchingCompiledClasses() throws IOException {
-                    String apiPath = System.getProperty("nbjavac.api.jar");
-                    String modulePath = System.getProperty("nbjavac.api.module.jar");
-                    String classesPath = System.getProperty("nbjavac.classes.dir");
-                    assertNotNull("Failsafe must set the API JAR path", apiPath);
-                    assertNotNull("Failsafe must set the API module JAR path", modulePath);
-                    assertNotNull("Failsafe must set the classes directory", classesPath);
-                    assertTrue("Published API must be the API module JAR",
-                            Arrays.equals(Files.readAllBytes(new File(modulePath).toPath()),
-                                    Files.readAllBytes(new File(apiPath).toPath())));
-
-                    try (JarFile jar = new JarFile(apiPath)) {
-                        Enumeration<JarEntry> entries = jar.entries();
-                        int classEntries = 0;
-                        while (entries.hasMoreElements()) {
-                            JarEntry entry = entries.nextElement();
-                            if (!entry.getName().endsWith(".class")) {
-                                continue;
-                            }
-                            File compiled = new File(classesPath, entry.getName());
-                            assertTrue("Missing compiled class: " + entry.getName(), compiled.isFile());
-                            CRC32 crc = new CRC32();
-                            crc.update(Files.readAllBytes(compiled.toPath()));
-                            assertEquals("API class differs from compiled class: " + entry.getName(),
-                                    entry.getCrc(), crc.getValue());
-                            classEntries++;
-                        }
-                        assertTrue("API JAR contains no classes", classEntries > 0);
-                    }
-                }
-
                 String path = packagePath(entry.getName());
                 if (path.endsWith(".class")) {
                     classEntries++;
                 }
                 assertTrue("Unexpected entry in API JAR: " + entry.getName(),
                         isAllowedApiEntry(path));
+            }
+            assertTrue("API JAR contains no classes", classEntries > 0);
+        }
+    }
+
+    @Test
+    public void publishesModuleJarWithMatchingCompiledClasses() throws IOException {
+        String apiPath = System.getProperty("nbjavac.api.jar");
+        String modulePath = System.getProperty("nbjavac.api.module.jar");
+        String classesPath = System.getProperty("nbjavac.classes.dir");
+        assertNotNull("Failsafe must set the API JAR path", apiPath);
+        assertNotNull("Failsafe must set the API module JAR path", modulePath);
+        assertNotNull("Failsafe must set the classes directory", classesPath);
+        assertTrue("Published API must be the API module JAR",
+                Arrays.equals(Files.readAllBytes(new File(modulePath).toPath()),
+                        Files.readAllBytes(new File(apiPath).toPath())));
+
+        try (JarFile jar = new JarFile(apiPath)) {
+            Enumeration<JarEntry> entries = jar.entries();
+            int classEntries = 0;
+            while (entries.hasMoreElements()) {
+                JarEntry entry = entries.nextElement();
+                if (!entry.getName().endsWith(".class")) {
+                    continue;
+                }
+                File compiled = new File(classesPath, entry.getName());
+                assertTrue("Missing compiled class: " + entry.getName(), compiled.isFile());
+                CRC32 crc = new CRC32();
+                crc.update(Files.readAllBytes(compiled.toPath()));
+                assertEquals("API class differs from compiled class: " + entry.getName(),
+                        entry.getCrc(), crc.getValue());
+                classEntries++;
             }
             assertTrue("API JAR contains no classes", classEntries > 0);
         }
