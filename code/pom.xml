@@ -161,6 +161,10 @@
           <nbjavac.implementation21.jar>${project.build.directory}/${project.build.finalName}-jdk21.jar</nbjavac.implementation21.jar>
           <nbjavac.runtime8.jar>${nbjavac.root}/run-on-jdk8/target/nb-javac-run-on-jdk8-${project.version}.jar</nbjavac.runtime8.jar>
           <nbjavac.runtime21.jar>${nbjavac.root}/run-on-jdk21/target/nb-javac-run-on-jdk21-${project.version}.jar</nbjavac.runtime21.jar>
+          <nbjavac.sources8.jar>${project.build.directory}/${project.build.finalName}-sources.jar</nbjavac.sources8.jar>
+          <nbjavac.sources21.jar>${project.build.directory}/${project.build.finalName}-jdk21-sources.jar</nbjavac.sources21.jar>
+          <nbjavac.generated8.dir>${nbjavac.root}/run-on-jdk8/target/generated/java</nbjavac.generated8.dir>
+          <nbjavac.generated21.dir>${nbjavac.root}/run-on-jdk21/target/generated/java</nbjavac.generated21.dir>
           <nbjavac.ctsym.jar>${nbjavac.root}/ctsym/target/nb-javac-ctsym-${project.version}.jar</nbjavac.ctsym.jar>
         </systemPropertyVariables></configuration>
         <executions><execution><phase>package</phase><goals><goal>integration-test</goal><goal>verify</goal></goals></execution></executions>

@@ -32,3 +32,4 @@ NashornProfile.txt
 /ctsym/target/
 api/target
 target
+**/.flattened-pom.xml

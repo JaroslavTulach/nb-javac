@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.zip.CRC32;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import org.junit.Test;
@@ -131,8 +132,30 @@ public class ImplJarContentIT {
                 if (!entry.isDirectory() && !"META-INF/MANIFEST.MF".equals(entry.getName())) {
                     publishedEntries++;
                 }
+
             }
             assertEquals("Unexpected implementation entries", sourceEntries, publishedEntries);
+        }
+    }
+
+    @Test
+    public void sourcesMatchEachRuntime() throws IOException {
+        checkSources("nbjavac.sources8.jar", "nbjavac.generated8.dir");
+        checkSources("nbjavac.sources21.jar", "nbjavac.generated21.dir");
+    }
+
+    private void checkSources(String jarProperty, String sourceProperty) throws IOException {
+        String jarPath = System.getProperty(jarProperty);
+        String sourcePath = System.getProperty(sourceProperty);
+        assertNotNull(jarPath);
+        assertNotNull(sourcePath);
+        String source = "java.compiler/share/classes/javax/tools/ToolProvider.java";
+        CRC32 crc = new CRC32();
+        crc.update(Files.readAllBytes(new File(sourcePath, source).toPath()));
+        try (JarFile jar = new JarFile(jarPath)) {
+            JarEntry entry = jar.getJarEntry("src/generated/java/" + source);
+            assertNotNull("Missing generated source in " + jarPath, entry);
+            assertEquals("Generated source does not match " + sourceProperty, crc.getValue(), entry.getCrc());
         }
     }
 }

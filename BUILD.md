@@ -16,15 +16,9 @@ in the `jdk` subdirectory and integrated into the JDK's `javac` **official repos
 $ JAVA_HOME=/jdk-25/ mvn clean package
 ```
 
-By default this project enables `jdk8+` compatibility profile. Such a profile guarantees the
-generated `nb-javac` can run on JDK8+, but in order to do so, it needs to apply more tweaks
-to the original OpenJDK sources. If you are not interested in such a level of portability,
-feel free to use `-Pjdk21+` profile to select only the
-refactorings needed for JDK 21 and later.
-
-Both profiles share Maven's output directory. Run `mvn clean` when switching
-profiles to avoid carrying compiled classes from the previous profile into
-the next artifact. A regular `mvn clean` retains the OpenJDK checkout.
+The reactor builds separate JDK 8+ and JDK 21+ implementations with their own
+generated sources and output directories. A regular `mvn clean` retains the
+OpenJDK checkout.
 
 Use the above command to build everything at once. The build is driven by
 the standard Maven lifecycle phases:
@@ -35,21 +29,20 @@ the standard Maven lifecycle phases:
 | `generate-sources` | applies the automatic refactorings to the sources (see below) |
 | `compile` | compiles the sources to the appropriate target Java bytecode |
 | `test` | compiles and runs the tests with `surefire` (skip with `-DskipTests`, run one with `-Dtest=StringWrapperTest`) |
-| `package` | creates the `api`, implementation and `sources` jars and checks their consistency |
+| `package` | creates the shared API, both implementation and sources jars, and checks their consistency |
 | `verify` | with the `release` profile signs the artifacts (see the [README](README.md)) |
 
-The root `pom.xml` aggregates the `ctsym`, `api` and `code` modules. `code` retains the
-`com.dukescript.nbjavac:nb-javac` artifact. Sources remain in the root `src`
-tree; module build output is in `code/target`.
+The root `pom.xml` aggregates `ctsym`, `api`, the shared `runtime` build,
+`run-on-jdk8`, `run-on-jdk21`, and `code`. The runtime modules compile and
+test the two implementations; `code` retains the
+`com.dukescript.nbjavac:nb-javac` artifact and assembles their JARs in
+`code/target`.
 
 The `ctsym` module repackages `META-INF/ct*` data from `org.frgaal:compiler`
-into `ctsym/target/nb-javac-ctsym-<version>.jar`. The code module unpacks
-that JAR into the implementation, so its runtime layout remains unchanged.
-The `api` module compiles the API into a temporary JAR; `code` copies it to
-`code/target` and attaches it as the existing `nb-javac:jar:api` artifact
-for the JDK 8+ profile. The JDK 21+ profile creates the local API JAR but
-does not install it. When building only `code`, use `mvn -pl code -am ...`
-to build its `ctsym` and `api` prerequisites as part of the reactor.
+into `ctsym/target/nb-javac-ctsym-<version>.jar`. Both runtime modules unpack
+that JAR into their implementations. The `api` module builds the shared JDK
+8-compatible API, which `code` attaches as `nb-javac:jar:api`. When building
+only `code`, use `mvn -pl code -am ...` to build its prerequisites.
 
 Any `-Dkey=value` given to `mvn` is passed to the build. Read below to control individual steps of the build.
 
@@ -89,28 +82,24 @@ a fresh copy of the `jdk` repository from scratch.
 
 ### Automatically processing the sources
 
-Once the JDK's `javac` sources are in the `jdk` subdirectory, the default
-`jdk8+` profile combines the shared [JDK 21+ refactorings](./src/main/resources/META-INF/upgrade/nbjavac-jdk21.hint)
+Once the JDK's `javac` sources are in the `jdk` subdirectory, `run-on-jdk8`
+combines the shared [JDK 21+ refactorings](./src/main/resources/META-INF/upgrade/nbjavac-jdk21.hint)
 with the additional [JDK 8+ compatibility refactorings](./src/main/resources/META-INF/upgrade/nbjavac.hint).
-The shared rules live only in the first file; the second contains only the
-additional rules. Use `-Pjdk21+` to apply only the shared set. The selected set
-is applied by the [Jackpot](https://netbeans.apache.org/jackpot/HintsFileFormat.html)
-phase:
+`run-on-jdk21` applies only the shared set. The
+[Jackpot](https://netbeans.apache.org/jackpot/HintsFileFormat.html) phase
+generates both:
 
 ```bash
 $ JAVA_HOME=/jdk-25/ mvn generate-sources
 ```
 
-This step copies the `javac` sources from the `jdk` subdirectory into
-`src/generated/java` and applies the selected transformations. The generated
-`src/generated/java/jackpot-done` marker records the profile, OpenJDK commit,
-and checksum of the combined hint set. Switching profiles or changing a hint
-file regenerates sources from the JDK checkout automatically. Project-owned
-helper classes live separately in `src/main/java`, split between `nbjavac.jdk8`
-and `nbjavac.jdk21`.
+This step copies the `javac` sources into `run-on-jdk8/target/generated/java`
+and `run-on-jdk21/target/generated/java`, then applies the respective
+transformations. Each `jackpot-done` marker records the profile, OpenJDK
+commit, and hint checksum. The API module also generates its JDK 8-compatible
+sources in `src/generated/java`. Project-owned helpers live in `src/main/java`.
 
-The sources under `src/generated/java/java.compiler` and
-`src/generated/java/jdk.compiler` shall not be edited manually. Instead, edit
+Generated sources shall not be edited manually. Instead, edit
 the sources in the original
 `jdk/src/java.compiler/` and `jdk/src/jdk.compiler/` directories. To apply
 the refactorings again execute:
@@ -128,16 +117,14 @@ generate the final JAR files:
 $ JAVA_HOME=/jdk-25/ mvn clean package
 ```
 
-The default `jdk8+` profile produces `nb-javac-<version>.jar`; the `jdk21+`
-profile produces `nb-javac-<version>-jdk21.jar`. Both produce an
-`nb-javac-<version>-api.jar` in `./code/target/`.
-The JDK 21+ sources JAR is named `nb-javac-<version>-jdk21-sources.jar`.
-On `install`, only the JDK 8+ API JAR is installed as the shared `api`
-artifact; the JDK 21+ API is built for testing but is not attached.
+The build produces `nb-javac-<version>.jar`,
+`nb-javac-<version>-jdk21.jar`, a shared `nb-javac-<version>-api.jar`,
+and `sources` and `jdk21-sources` JARs in `./code/target/`. All are
+installed under the original `nb-javac` coordinates.
 
 ### Maven repository staging in CI
 
-After both compatibility profiles pass their runtime tests, GitHub Actions
+After both implementations pass their runtime tests, GitHub Actions
 uploads a `maven-repository-<run-id>` artifact with a Maven-layout directory
 tree. The unclassified artifacts are the `jdk8+` build; the `jdk21+`
 implementation and sources have `jdk21` and `jdk21-sources` classifiers.
@@ -170,7 +157,7 @@ $ netbeans --open .
 and you should be able to debug a test (for example `StringWrapperTest`) with following command line:
 
 ```bash
-$ JAVA_HOME=/jdk-8/ mvn test -Dtest=StringWrapperTest -Dmaven.surefire.debug
+$ JAVA_HOME=/jdk-8/ mvn -pl run-on-jdk8 surefire:test -Dtest=StringWrapperTest -Dmaven.surefire.debug
 ```
 
 The test JVM waits for a debugger on port 5005.
