@@ -19,6 +19,7 @@
 
   <modules>
     <module>ctsym</module>
+    <module>api</module>
     <module>code</module>
   </modules>
 </project>
