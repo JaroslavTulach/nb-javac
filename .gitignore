@@ -27,3 +27,5 @@ NashornProfile.txt
 /make/langtools/netbeans/nb-javac/dist/
 /target/
 /.flattened-pom.xml
+/code/target/
+/code/.flattened-pom.xml

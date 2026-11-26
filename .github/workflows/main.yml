@@ -36,9 +36,9 @@ jobs:
             else
               implementation_jar="$jar"
             fi
-          done < <(find target -maxdepth 1 -type f -name 'nb-javac-*.jar' ! -name '*-sources.jar' -print | sort)
+          done < <(find code/target -maxdepth 1 -type f -name 'nb-javac-*.jar' ! -name '*-sources.jar' -print | sort)
           if [[ "$main_jar_count" -ne 2 ]]; then
-            echo "Expected implementation and API JARs in target/, found $main_jar_count." >&2
+            echo "Expected implementation and API JARs in code/target/, found $main_jar_count." >&2
             exit 1
           fi
           if [[ -z "$api_jar" || -z "$implementation_jar" ]]; then
@@ -46,9 +46,9 @@ jobs:
             exit 1
           fi
 
-          sources_jar=$(find target -maxdepth 1 -type f -name 'nb-javac-*-sources.jar' -print -quit)
+          sources_jar=$(find code/target -maxdepth 1 -type f -name 'nb-javac-*-sources.jar' -print -quit)
           if [[ -z "$sources_jar" ]]; then
-            echo "No sources JAR found in target/." >&2
+            echo "No sources JAR found in code/target/." >&2
             exit 1
           fi
 
@@ -59,7 +59,7 @@ jobs:
           cp "$implementation_jar" maven-staging/
           cp "$api_jar" maven-staging/
           cp "$sources_jar" maven-staging/
-          cp .flattened-pom.xml "maven-staging/nb-javac-${version}.pom"
+          cp code/.flattened-pom.xml "maven-staging/nb-javac-${version}.pom"
       - name: Upload Maven staging inputs
         uses: actions/upload-artifact@v4
         with:
@@ -71,7 +71,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: compiled-${{ matrix.profile }}
-          path: target/
+          path: code/target/
           if-no-files-found: error
           retention-days: 1
       - name: Build patched JDK25
@@ -110,9 +110,9 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: compiled-${{ matrix.profile }}
-          path: target/
+          path: code/target/
       - name: Run tests on prebuilt classes
-        run: mvn -B -P${{ matrix.profile }} surefire:test
+        run: mvn -B -pl code -P${{ matrix.profile }} surefire:test
 
   stage-maven-repository:
     name: Stage Maven repository layout

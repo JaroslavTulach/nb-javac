@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-    Helper script called from the root pom.xml. It prepares the sources and
+    Helper script called from code/pom.xml. It prepares the sources and
     can install the built jars into a NetBeans distribution.
     The classes are compiled, tested and packaged by Maven.
     Do not call this script directly, use `mvn`.
@@ -33,9 +33,9 @@
     <target name="-prepare-jackpot.marker">
         <fail unless="jackpot.profile" message="Select a Jackpot profile, for example -Pjdk8+ or -Pjdk21+."/>
         <fail unless="jackpot.hint.files" message="The selected Jackpot hint files are not configured."/>
-        <mkdir dir="${root}/target"/>
+        <mkdir dir="${nbjavac.output.dir}"/>
         <property name="jackpot.combined.hint.file"
-                  location="${root}/target/nbjavac-${jackpot.profile}.hint"/>
+                  location="${nbjavac.output.dir}/nbjavac-${jackpot.profile}.hint"/>
         <concat destfile="${jackpot.combined.hint.file}" fixlastline="yes">
             <filelist dir="${root}/src/main/resources/META-INF/upgrade"
                       files="${jackpot.hint.files}"/>
@@ -120,9 +120,9 @@
                 </fileset>
             </path>
         </pathconvert>
-        <copy file="${root}/target/${nbjavac.implementation.finalName}.jar"
+        <copy file="${nbjavac.output.dir}/${nbjavac.implementation.finalName}.jar"
               tofile="${netbeans.impl.jar}" overwrite="true"/>
-        <copy file="${root}/target/nb-javac-${revision}-api.jar"
+        <copy file="${nbjavac.output.dir}/nb-javac-${revision}-api.jar"
               tofile="${netbeans.api.jar}" overwrite="true"/>
         <touch file="${netbeans.dest.dir}/java/.lastModified"/>
     </target>

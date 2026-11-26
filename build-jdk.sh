@@ -45,8 +45,8 @@ cp jdk/src/java.compiler/share/classes/module-info.java build/test/src/java.comp
 patch -R build/test/src/java.compiler/module-info.java temporary-patches/test-java.compiler
 
 mkdir -p build/test/out/java.compiler
-cp -r target/classes/javax build/test/out/java.compiler/
-cp -r target/classes/nbjavac build/test/out/java.compiler/
+cp -r code/target/classes/javax build/test/out/java.compiler/
+cp -r code/target/classes/nbjavac build/test/out/java.compiler/
 
 #jdk.compiler:
 rm build/test/modules/jdk.compiler.jmod
@@ -58,11 +58,11 @@ patch build/test/src/jdk.compiler/module-info.java temporary-patches/test-jdk.co
 
 mkdir -p build/test/out/jdk.compiler
 mkdir -p build/test/out/jdk.compiler/com/sun/source
-cp -r target/classes/com/sun/source build/test/out/jdk.compiler/com/sun/
+cp -r code/target/classes/com/sun/source build/test/out/jdk.compiler/com/sun/
 mkdir -p build/test/out/jdk.compiler/com/sun/tools/javac
-cp -r target/classes/com/sun/tools/javac build/test/out/jdk.compiler/com/sun/tools/
+cp -r code/target/classes/com/sun/tools/javac build/test/out/jdk.compiler/com/sun/tools/
 mkdir -p build/test/out/jdk.compiler/com/sun/tools/doclint
-cp -r target/classes/com/sun/tools/doclint build/test/out/jdk.compiler/com/sun/tools/
+cp -r code/target/classes/com/sun/tools/doclint build/test/out/jdk.compiler/com/sun/tools/
 
 rm -rf build/test/expanded/jdk.compiler
 mkdir -p build/test/expanded/jdk.compiler
@@ -86,9 +86,9 @@ cp -r build/test/expanded/jdk.jdeps/classes/* build/test/out/jdk.jdeps/
 rm -rf build/test/out/jdk.jdeps/com/sun/tools/classfile/
 
 mkdir -p build/test/out/jdk.jdeps/com/sun/tools/classfile/
-cp -r target/classes/com/sun/tools/classfile build/test/out/jdk.jdeps/com/sun/tools/
+cp -r code/target/classes/com/sun/tools/classfile build/test/out/jdk.jdeps/com/sun/tools/
 mkdir -p build/test/out/jdk.jdeps/com/sun/tools/javap
-cp -r target/classes/com/sun/tools/javap build/test/out/jdk.jdeps/com/sun/tools/
+cp -r code/target/classes/com/sun/tools/javap build/test/out/jdk.jdeps/com/sun/tools/
 
 #build module-infos:
 $JAVA_HOME_VERSION/bin/javac --module-source-path build/test/src/ -d build/test/out `find build/test/src/ -type f -name "*.java"`

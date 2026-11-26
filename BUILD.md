@@ -38,6 +38,14 @@ the standard Maven lifecycle phases:
 | `package` | creates the `api`, implementation and `sources` jars and checks their consistency |
 | `verify` | with the `release` profile signs the artifacts (see the [README](README.md)) |
 
+The root `pom.xml` aggregates the `code` module, which retains the
+`com.dukescript.nbjavac:nb-javac` artifact. Sources remain in the root `src`
+tree; module build output is in `code/target`.
+
+The next step is a `ctsym` module that repackages the `META-INF/ct*` data
+currently unpacked from `org.frgaal:compiler`. The code module can then use
+that artifact while preserving the existing implementation JAR contents.
+
 Any `-Dkey=value` given to `mvn` is passed to the build. Read below to control individual steps of the build.
 
 
@@ -117,7 +125,7 @@ $ JAVA_HOME=/jdk-25/ mvn clean package
 
 The default `jdk8+` profile produces `nb-javac-<version>.jar`; the `jdk21+`
 profile produces `nb-javac-<version>-jdk21.jar`. Both produce an
-`nb-javac-<version>-api.jar` in `./target/`.
+`nb-javac-<version>-api.jar` in `./code/target/`.
 The JDK 21+ sources JAR is named `nb-javac-<version>-jdk21-sources.jar`.
 On `install`, only the JDK 8+ API JAR is installed as the shared `api`
 artifact; the JDK 21+ API is built for testing but is not attached.

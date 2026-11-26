@@ -51,10 +51,10 @@ $ JAVA_HOME=/jdk-25/ mvn clean package -Pjdk21+
 ```
 
 Two jars namely `nb-javac-*-api.jar` and `nb-javac-*.jar` (the implementation)
-are going to appear in the `./target/` directory. It is also possible to
+are going to appear in the `./code/target/` directory. It is also possible to
 sanity test the generated Javac on JDK8 (in case of `jdk8+` profile being used):
 ```bash
-$ JAVA_HOME=/jdk-8/ mvn surefire:test
+$ JAVA_HOME=/jdk-8/ mvn -pl code surefire:test
 ```
 The `package` phase also creates a sources JAR: `nb-javac-*-sources.jar`
 for `jdk8+`, or `nb-javac-*-jdk21-sources.jar` for `jdk21+`.
