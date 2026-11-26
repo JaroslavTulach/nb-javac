@@ -10,6 +10,8 @@ package nbjavac;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -22,18 +24,17 @@ import static org.junit.Assert.assertTrue;
 public class ImplJarContentIT {
 
     @Test
-    public void containsOnlyHelpersForSelectedProfile() throws IOException {
-        String profile = System.getProperty("nbjavac.profile");
-        assertNotNull("Failsafe must set the build profile", profile);
-        assertTrue("Unexpected build profile: " + profile,
-                "jdk8+".equals(profile) || "jdk21+".equals(profile));
+    public void containsOnlyHelpersForEachRuntime() throws IOException {
+        checkHelpers("nbjavac.implementation.jar", true);
+        checkHelpers("nbjavac.implementation21.jar", false);
+    }
 
-        String jarPath = System.getProperty("nbjavac.implementation.jar");
-        assertNotNull("Failsafe must set the implementation JAR path", jarPath);
+    private void checkHelpers(String property, boolean jdk8Profile) throws IOException {
+        String jarPath = System.getProperty(property);
+        assertNotNull("Failsafe must set " + property, jarPath);
         File implJar = new File(jarPath);
         assertTrue("Implementation JAR does not exist: " + implJar, implJar.isFile());
 
-        boolean jdk8Profile = "jdk8+".equals(profile);
         try (JarFile jar = new JarFile(implJar)) {
             assertTrue("JDK 21 helpers are missing",
                     jar.getEntry("nbjavac/jdk21/JmodFileWrapper.class") != null
@@ -60,7 +61,12 @@ public class ImplJarContentIT {
 
     @Test
     public void containsAllCtSymData() throws IOException {
-        String implPath = System.getProperty("nbjavac.implementation.jar");
+        checkCtSym("nbjavac.implementation.jar");
+        checkCtSym("nbjavac.implementation21.jar");
+    }
+
+    private void checkCtSym(String property) throws IOException {
+        String implPath = System.getProperty(property);
         String ctSymPath = System.getProperty("nbjavac.ctsym.jar");
         assertNotNull("Failsafe must set the implementation JAR path", implPath);
         assertNotNull("Failsafe must set the ct.sym JAR path", ctSymPath);
@@ -89,6 +95,44 @@ public class ImplJarContentIT {
                 }
             }
             assertEquals("Unexpected bundled ct.sym entries", ctSymEntries, bundledEntries);
+        }
+    }
+
+    @Test
+    public void republishesRuntimeArtifacts() throws IOException {
+        String runtime8 = System.getProperty("nbjavac.runtime8.jar");
+        String runtime21 = System.getProperty("nbjavac.runtime21.jar");
+        String impl8 = System.getProperty("nbjavac.implementation.jar");
+        String impl21 = System.getProperty("nbjavac.implementation21.jar");
+        assertNotNull(runtime8);
+        assertNotNull(runtime21);
+        assertNotNull(impl8);
+        assertNotNull(impl21);
+        assertTrue("JDK 21 implementation must be the runtime module JAR",
+                Arrays.equals(Files.readAllBytes(new File(runtime21).toPath()),
+                        Files.readAllBytes(new File(impl21).toPath())));
+        try (JarFile source = new JarFile(runtime8); JarFile repackaged = new JarFile(impl8)) {
+            int sourceEntries = 0;
+            Enumeration<JarEntry> entries = source.entries();
+            while (entries.hasMoreElements()) {
+                JarEntry entry = entries.nextElement();
+                if (entry.isDirectory() || "META-INF/MANIFEST.MF".equals(entry.getName())) {
+                    continue;
+                }
+                JarEntry copy = repackaged.getJarEntry(entry.getName());
+                assertNotNull("Missing implementation entry: " + entry.getName(), copy);
+                assertEquals("Changed implementation entry: " + entry.getName(), entry.getCrc(), copy.getCrc());
+                sourceEntries++;
+            }
+            int publishedEntries = 0;
+            entries = repackaged.entries();
+            while (entries.hasMoreElements()) {
+                JarEntry entry = entries.nextElement();
+                if (!entry.isDirectory() && !"META-INF/MANIFEST.MF".equals(entry.getName())) {
+                    publishedEntries++;
+                }
+            }
+            assertEquals("Unexpected implementation entries", sourceEntries, publishedEntries);
         }
     }
 }

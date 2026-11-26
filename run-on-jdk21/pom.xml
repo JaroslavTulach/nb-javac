@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.dukescript.nbjavac</groupId>
+    <artifactId>nb-javac-runtime-parent</artifactId>
+    <version>${revision}</version>
+    <relativePath>../runtime/pom.xml</relativePath>
+  </parent>
+  <artifactId>nb-javac-run-on-jdk21</artifactId>
+  <name>nb-javac for JDK 21+</name>
+  <properties>
+    <runtime.target>21</runtime.target>
+    <jackpot.profile>jdk21+</jackpot.profile>
+    <jackpot.hint.files>nbjavac-jdk21.hint</jackpot.hint.files>
+  </properties>
+  <build><plugins>
+    <plugin><artifactId>maven-dependency-plugin</artifactId></plugin>
+    <plugin><artifactId>maven-antrun-plugin</artifactId></plugin>
+    <plugin><groupId>org.codehaus.mojo</groupId><artifactId>build-helper-maven-plugin</artifactId></plugin>
+    <plugin><artifactId>maven-resources-plugin</artifactId></plugin>
+    <plugin><artifactId>maven-surefire-plugin</artifactId></plugin>
+    <plugin>
+      <artifactId>maven-compiler-plugin</artifactId>
+      <executions>
+        <execution><id>compile-sourceversion-java11</id><configuration><skipMain>true</skipMain></configuration></execution>
+        <execution>
+          <id>default-testCompile</id>
+          <configuration>
+            <compilerArgs combine.self="override"><arg>--limit-modules</arg><arg>java.base,java.logging</arg></compilerArgs>
+          </configuration>
+        </execution>
+      </executions>
+    </plugin>
+    <plugin>
+      <artifactId>maven-jar-plugin</artifactId>
+      <executions><execution>
+        <id>default-jar</id>
+        <configuration><excludes><exclude>nbjavac/jdk8/**</exclude></excludes></configuration>
+      </execution></executions>
+    </plugin>
+  </plugins></build>
+</project>

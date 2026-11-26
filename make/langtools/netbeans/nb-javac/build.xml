@@ -13,6 +13,7 @@
     <property name="jdk.repo" location="${root}/jdk"/>
     <property name="src.dir" location="${root}/src/generated/java"/>
     <property name="tools.dir" location="${root}/lib"/>
+    <property name="propertiesparser.classes.dir" location="${root}/lib/propertiesparser"/>
 
     <target name="-check-properties">
         <fail unless="jdk.git.url" message="Property jdk.git.url is not defined. Build with Maven (mvn) or specify -Djdk.git.url=..."/>
@@ -135,13 +136,13 @@
 
     <target name="generate-files" depends="jackpot,-check-generated-files" unless="generated.files.up.to.date"
             description="Generates the sources which are not part of the OpenJDK repository.">
-        <mkdir dir="${root}/lib/propertiesparser"/>
-        <javac destdir="${root}/lib/propertiesparser" source="25" target="25" release="25" debug="true" srcdir="${jdk.repo}/make/langtools/tools/">
+        <mkdir dir="${propertiesparser.classes.dir}"/>
+        <javac destdir="${propertiesparser.classes.dir}" source="25" target="25" release="25" debug="true" srcdir="${jdk.repo}/make/langtools/tools/">
             <include name="propertiesparser/**/*.java"/>
             <include name="flagsgenerator/**/*.java"/>
         </javac>
         <path id="propertiesparser">
-            <pathelement location="${root}/lib/propertiesparser"/>
+            <pathelement location="${propertiesparser.classes.dir}"/>
             <pathelement location="${jdk.repo}/make/langtools/tools/"/>
         </path>
         <java failonerror="true" classpathref="propertiesparser" classname="propertiesparser.PropertiesParser">
@@ -163,10 +164,6 @@
     <target name="jackpot" depends="init,-check-jackpot.marker" unless="jackpot.has.been.applied"
             description="Copies the OpenJDK sources and applies the refactorings to them.">
         <delete dir="${src.dir}"/>
-        <delete dir="${root}/src/java.base"/>
-        <delete dir="${root}/src/java.compiler"/>
-        <delete dir="${root}/src/jdk.compiler"/>
-        <delete file="${root}/src/jackpot-done"/>
         <mkdir dir="${src.dir}"/>
         <copy todir="${src.dir}">
             <fileset dir="${jdk.repo}/src/">

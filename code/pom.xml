@@ -3,200 +3,109 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-
   <parent>
     <groupId>com.dukescript.nbjavac</groupId>
     <artifactId>nb-javac-parent</artifactId>
     <version>${revision}</version>
   </parent>
   <artifactId>nb-javac</artifactId>
-  <!-- The jars, including the sources one, are created by the standard lifecycle -->
   <packaging>jar</packaging>
-
   <name>nb-javac</name>
   <description>
-      `nb-javac` is a "backport" of OpenJDK `javac`, i.e., the Java compiler.
-      It allows to run the latest OpenJDK compiler on older JDKs - as old
-      as JDK8 while being 1:1 identical with the official `javac`.
-      Use `nb-javac` to execute the latest Java language compiler on old
-      JDKs!
+    `nb-javac` is a "backport" of OpenJDK `javac`, i.e., the Java compiler.
+    It allows to run the latest OpenJDK compiler on older JDKs - as old
+    as JDK8 while being 1:1 identical with the official `javac`.
+    Use `nb-javac` to execute the latest Java language compiler on old JDKs!
   </description>
   <url>https://github.com/jaroslavtulach/nb-javac</url>
-
-  <licenses>
-    <license>
-      <name>GPLv2-CPE</name>
-      <url>https://openjdk.java.net/legal/gplv2+ce.html</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
-
+  <licenses><license>
+    <name>GPLv2-CPE</name><url>https://openjdk.java.net/legal/gplv2+ce.html</url><distribution>repo</distribution>
+  </license></licenses>
   <scm>
     <connection>scm:git:https://github.com/jaroslavtulach/nb-javac.git</connection>
     <developerConnection>scm:git:git@github.com:jaroslavtulach/nb-javac.git</developerConnection>
     <url>https://github.com/jaroslavtulach/nb-javac</url>
   </scm>
-
-  <developers>
-    <developer>
-      <email>jaroslav.tulach@apidesign.org</email>
-      <name>Jaroslav Tulach</name>
-      <url>https://github.com/jaroslavtulach</url>
-      <roles>
-        <role>Developer</role>
-      </roles>
-    </developer>
-  </developers>
+  <developers><developer>
+    <email>jaroslav.tulach@apidesign.org</email><name>Jaroslav Tulach</name>
+    <url>https://github.com/jaroslavtulach</url><roles><role>Developer</role></roles>
+  </developer></developers>
 
   <properties>
-    <!-- releases are assembled from local installs -->
-    <maven.deploy.skip>true</maven.deploy.skip>
     <nbjavac.root>${project.basedir}/..</nbjavac.root>
-    <nbjavac.output.dir>${project.build.directory}</nbjavac.output.dir>
-    <nbjavac.tools.dir>${nbjavac.root}/lib</nbjavac.tools.dir>
     <nbjavac.ant.dir>${nbjavac.root}/make/langtools/netbeans/nb-javac</nbjavac.ant.dir>
+    <nbjavac.output.dir>${project.build.directory}</nbjavac.output.dir>
     <nbjavac.implementation.finalName>${project.build.finalName}</nbjavac.implementation.finalName>
-    <jackpot.profile>jdk8+</jackpot.profile>
-    <jackpot.hint.files>nbjavac-jdk21.hint,nbjavac.hint</jackpot.hint.files>
   </properties>
-
   <dependencies>
     <dependency>
-      <!-- provides com.sun.tools.javap, com.sun.tools.classfile and nbjavac.sun.annotation which are not compiled from the JDK sources -->
-      <groupId>com.dukescript.nbjavac</groupId>
-      <artifactId>nb-javac</artifactId>
-      <version>jdk-21u</version>
-      <scope>provided</scope>
+      <groupId>com.dukescript.nbjavac</groupId><artifactId>nb-javac-api</artifactId>
+      <version>${project.version}</version><scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.12</version>
-      <scope>test</scope>
+      <groupId>com.dukescript.nbjavac</groupId><artifactId>nb-javac-run-on-jdk8</artifactId>
+      <version>${project.version}</version><scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>com.dukescript.nbjavac</groupId><artifactId>nb-javac-run-on-jdk21</artifactId>
+      <version>${project.version}</version><scope>provided</scope>
+    </dependency>
+    <dependency><groupId>junit</groupId><artifactId>junit</artifactId><version>4.12</version><scope>test</scope></dependency>
   </dependencies>
-
   <build>
-    <sourceDirectory>${nbjavac.root}/src/main/java</sourceDirectory>
     <testSourceDirectory>${nbjavac.root}/src/test/java</testSourceDirectory>
-    <testResources>
-      <testResource>
-        <directory>${nbjavac.root}/src/test/resources</directory>
-      </testResource>
-    </testResources>
-    <resources>
-      <resource>
-        <!-- packaged into the jars -->
-        <directory>${nbjavac.root}</directory>
-        <includes>
-          <include>README.md</include>
-          <include>SECURITY.md</include>
-        </includes>
-      </resource>
-      <resource>
-        <directory>${nbjavac.root}/src/main/resources</directory>
-      </resource>
-      <resource>
-        <directory>${nbjavac.root}/src/generated/java/java.compiler/share/classes</directory>
-        <excludes>
-          <exclude>**/*.java</exclude>
-        </excludes>
-      </resource>
-      <resource>
-        <directory>${nbjavac.root}/src/generated/java/jdk.compiler/share/classes</directory>
-        <excludes>
-          <exclude>**/*.java</exclude>
-          <exclude>com/sun/tools/javac/launcher/**</exclude>
-          <exclude>com/sun/tools/javac/sym/**</exclude>
-          <exclude>com/sun/tools/sjavac/**</exclude>
-          <exclude>sun/**</exclude>
-        </excludes>
-      </resource>
-    </resources>
     <plugins>
       <plugin>
-        <!-- the jackpot tool used by the Ant build; it is copied to its tools.dir -->
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <version>3.8.1</version>
-        <dependencies>
-          <dependency>
-            <groupId>com.dukescript.nbjavac</groupId>
-            <artifactId>nb-javac-ctsym</artifactId>
-            <version>${project.version}</version>
-          </dependency>
-        </dependencies>
+        <artifactId>maven-compiler-plugin</artifactId><version>3.13.0</version>
         <configuration>
-          <outputDirectory>${nbjavac.tools.dir}</outputDirectory>
-          <artifactItems>
-            <artifactItem>
-              <groupId>org.apache.netbeans.modules.jackpot30</groupId>
-              <artifactId>tool</artifactId>
-              <version>28.0</version>
-              <destFileName>jackpot.jar</destFileName>
-            </artifactItem>
-          </artifactItems>
+          <source>8</source><target>8</target>
+          <testIncludes><testInclude>nbjavac/*IT.java</testInclude></testIncludes>
         </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId><version>3.5.3</version>
+        <configuration><skipTests>true</skipTests></configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-dependency-plugin</artifactId><version>3.8.1</version>
         <executions>
           <execution>
-            <id>download-tools</id>
-            <phase>initialize</phase>
-            <goals>
-              <goal>copy</goal>
-            </goals>
-          </execution>
-          <execution>
-            <!-- classes which are not compiled from the JDK sources, see also the provided dependency -->
-            <id>unpack-reflect</id>
-            <phase>initialize</phase>
-            <goals>
-              <goal>unpack</goal>
-            </goals>
+            <id>unpack-main-and-api</id><phase>package</phase><goals><goal>unpack</goal></goals>
             <configuration>
               <outputDirectory>${project.build.outputDirectory}</outputDirectory>
-              <includes>nbjavac/sun/annotation/**,com/sun/tools/classfile/**,com/sun/tools/javap/**</includes>
+              <overWriteReleases>true</overWriteReleases><overWriteSnapshots>true</overWriteSnapshots>
+              <excludes>META-INF/MANIFEST.MF,META-INF/versions/*/META-INF/**</excludes>
               <artifactItems>
                 <artifactItem>
-                  <groupId>com.dukescript.nbjavac</groupId>
-                  <artifactId>nb-javac</artifactId>
-                  <version>jdk-21u</version>
+                  <groupId>com.dukescript.nbjavac</groupId><artifactId>nb-javac-run-on-jdk8</artifactId><version>${project.version}</version>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>com.dukescript.nbjavac</groupId><artifactId>nb-javac-api</artifactId><version>${project.version}</version>
                 </artifactItem>
               </artifactItems>
             </configuration>
           </execution>
           <execution>
-            <!-- platform data used by nb-javac running on JDK 8, packaged into the impl jar -->
-            <id>unpack-ct-sym</id>
-            <phase>initialize</phase>
-            <goals>
-              <goal>unpack</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${project.build.outputDirectory}</outputDirectory>
-              <includes>META-INF/ct*/**</includes>
-              <artifactItems>
-                <artifactItem>
-                  <groupId>com.dukescript.nbjavac</groupId>
-                  <artifactId>nb-javac-ctsym</artifactId>
-                  <version>${project.version}</version>
-                </artifactItem>
-              </artifactItems>
-            </configuration>
-          </execution>
-          <execution>
-            <id>copy-api-jar</id>
-            <phase>package</phase>
-            <goals><goal>copy</goal></goals>
+            <id>copy-artifacts</id><phase>package</phase><goals><goal>copy</goal></goals>
             <configuration>
               <outputDirectory>${project.build.directory}</outputDirectory>
-              <overWriteReleases>true</overWriteReleases>
-              <overWriteSnapshots>true</overWriteSnapshots>
+              <overWriteReleases>true</overWriteReleases><overWriteSnapshots>true</overWriteSnapshots>
               <artifactItems>
                 <artifactItem>
-                  <groupId>com.dukescript.nbjavac</groupId>
-                  <artifactId>nb-javac-api</artifactId>
-                  <version>${project.version}</version>
+                  <groupId>com.dukescript.nbjavac</groupId><artifactId>nb-javac-api</artifactId><version>${project.version}</version>
                   <destFileName>${project.build.finalName}-api.jar</destFileName>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>com.dukescript.nbjavac</groupId><artifactId>nb-javac-run-on-jdk21</artifactId><version>${project.version}</version>
+                  <destFileName>${project.build.finalName}-jdk21.jar</destFileName>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>com.dukescript.nbjavac</groupId><artifactId>nb-javac-run-on-jdk8</artifactId><version>${project.version}</version><classifier>sources</classifier>
+                  <destFileName>${project.build.finalName}-sources.jar</destFileName>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>com.dukescript.nbjavac</groupId><artifactId>nb-javac-run-on-jdk21</artifactId><version>${project.version}</version><classifier>sources</classifier>
+                  <destFileName>${project.build.finalName}-jdk21-sources.jar</destFileName>
                 </artifactItem>
               </artifactItems>
             </configuration>
@@ -204,547 +113,132 @@
         </executions>
       </plugin>
       <plugin>
-        <!-- Declares the remaining main source roots, the generated ones are produced by the generate-sources phase -->
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
-        <version>3.6.0</version>
+        <groupId>org.codehaus.mojo</groupId><artifactId>build-helper-maven-plugin</artifactId><version>3.6.0</version>
+        <executions><execution>
+          <id>attach-artifacts</id><phase>package</phase><goals><goal>attach-artifact</goal></goals>
+          <configuration><artifacts>
+            <artifact><file>${project.build.directory}/${project.build.finalName}-api.jar</file><type>jar</type><classifier>api</classifier></artifact>
+            <artifact><file>${project.build.directory}/${project.build.finalName}-jdk21.jar</file><type>jar</type><classifier>jdk21</classifier></artifact>
+            <artifact><file>${project.build.directory}/${project.build.finalName}-sources.jar</file><type>jar</type><classifier>sources</classifier></artifact>
+            <artifact><file>${project.build.directory}/${project.build.finalName}-jdk21-sources.jar</file><type>jar</type><classifier>jdk21-sources</classifier></artifact>
+          </artifacts></configuration>
+        </execution></executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId><version>3.5.0</version>
+        <configuration><archive><addMavenDescriptor>false</addMavenDescriptor></archive></configuration>
         <executions>
+          <execution><id>default-jar</id><phase>none</phase></execution>
           <execution>
-            <id>add-source</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>add-source</goal>
-            </goals>
-            <configuration>
-              <sources>
-                <source>${nbjavac.root}/src/generated/java/java.compiler/share/classes</source>
-                <source>${nbjavac.root}/src/generated/java/jdk.compiler/share/classes</source>
-                <source>${nbjavac.root}/src/generated/java/java.base/share/classes</source>
-              </sources>
-            </configuration>
-          </execution>
-          <execution>
-            <id>attach-api-jar</id>
-            <phase>package</phase>
-            <goals><goal>attach-artifact</goal></goals>
-            <configuration>
-              <artifacts>
-                <artifact>
-                  <file>${project.build.directory}/${project.build.finalName}-api.jar</file>
-                  <type>jar</type>
-                  <classifier>api</classifier>
-                </artifact>
-              </artifacts>
-            </configuration>
+            <id>assemble-main</id><phase>package</phase><goals><goal>jar</goal></goals>
+            <configuration><includes>
+              <include>META-INF/services/**</include><include>META-INF/ct*/**</include>
+              <include>com/sun/tools/**</include><include>jdk/internal/shellsupport/**</include>
+              <include>jdk/internal/PreviewFeature*</include><include>nbjavac/**</include>
+              <include>README.md</include><include>SECURITY.md</include>
+            </includes></configuration>
           </execution>
         </executions>
       </plugin>
       <plugin>
-        <!-- publishes the pom with ${revision} resolved -->
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>flatten-maven-plugin</artifactId>
-        <version>1.7.0</version>
+        <groupId>org.codehaus.mojo</groupId><artifactId>flatten-maven-plugin</artifactId><version>1.7.0</version>
         <configuration>
-          <updatePomFile>true</updatePomFile>
-          <flattenMode>ossrh</flattenMode>
-          <pomElements>
-            <!-- the dependencies are only used to build nb-javac -->
-            <dependencies>remove</dependencies>
-          </pomElements>
+          <updatePomFile>true</updatePomFile><flattenMode>ossrh</flattenMode>
+          <pomElements><dependencies>remove</dependencies></pomElements>
         </configuration>
         <executions>
-          <execution>
-            <id>flatten</id>
-            <phase>process-resources</phase>
-            <goals>
-              <goal>flatten</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>flatten-clean</id>
-            <phase>clean</phase>
-            <goals>
-              <goal>clean</goal>
-            </goals>
-          </execution>
+          <execution><id>flatten</id><phase>process-resources</phase><goals><goal>flatten</goal></goals></execution>
+          <execution><id>flatten-clean</id><phase>clean</phase><goals><goal>clean</goal></goals></execution>
         </executions>
       </plugin>
       <plugin>
-        <groupId>net.nicoulaj.maven.plugins</groupId>
-        <artifactId>checksum-maven-plugin</artifactId>
-        <version>1.11</version>
+        <artifactId>maven-failsafe-plugin</artifactId><version>3.5.3</version>
+        <configuration><systemPropertyVariables>
+          <nbjavac.api.jar>${project.build.directory}/${project.build.finalName}-api.jar</nbjavac.api.jar>
+          <nbjavac.api.module.jar>${nbjavac.root}/api/target/nb-javac-api-${project.version}.jar</nbjavac.api.module.jar>
+          <nbjavac.classes.dir>${nbjavac.root}/run-on-jdk8/target/classes</nbjavac.classes.dir>
+          <nbjavac.implementation.jar>${project.build.directory}/${project.build.finalName}.jar</nbjavac.implementation.jar>
+          <nbjavac.implementation21.jar>${project.build.directory}/${project.build.finalName}-jdk21.jar</nbjavac.implementation21.jar>
+          <nbjavac.runtime8.jar>${nbjavac.root}/run-on-jdk8/target/nb-javac-run-on-jdk8-${project.version}.jar</nbjavac.runtime8.jar>
+          <nbjavac.runtime21.jar>${nbjavac.root}/run-on-jdk21/target/nb-javac-run-on-jdk21-${project.version}.jar</nbjavac.runtime21.jar>
+          <nbjavac.ctsym.jar>${nbjavac.root}/ctsym/target/nb-javac-ctsym-${project.version}.jar</nbjavac.ctsym.jar>
+        </systemPropertyVariables></configuration>
+        <executions><execution><phase>package</phase><goals><goal>integration-test</goal><goal>verify</goal></goals></execution></executions>
       </plugin>
-      <plugin>
-        <artifactId>maven-resources-plugin</artifactId>
-        <version>3.3.1</version>
-        <executions>
-          <execution>
-            <!-- only this file of the original sources, so that the other classes are taken from the classpath -->
-            <id>copy-sourceversion-java11</id>
-            <phase>process-resources</phase>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${project.build.directory}/sourceversion-java11/javax/lang/model</outputDirectory>
-              <resources>
-                <resource>
-                  <directory>${nbjavac.root}/jdk/src/java.compiler/share/classes/javax/lang/model</directory>
-                  <includes>
-                    <include>SourceVersion.java</include>
-                  </includes>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <!-- frgaal: compiles the modern JDK sources into Java 8 bytecode -->
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.13.0</version>
-        <dependencies>
-          <dependency>
-            <groupId>org.frgaal</groupId>
-            <artifactId>compiler-maven-plugin</artifactId>
-            <version>25.0.0</version>
-          </dependency>
-        </dependencies>
-        <configuration>
-          <compilerId>frgaal</compilerId>
-          <source>24</source>
-          <target>1.8</target>
-          <encoding>UTF-8</encoding>
-          <debug>true</debug>
-          <createMissingPackageInfoClass>false</createMissingPackageInfoClass>
-          <compilerArgs>
-            <arg>--limit-modules</arg>
-            <arg>java.base</arg>
-          </compilerArgs>
-          <excludes>
-            <exclude>**/module-info.java</exclude>
-            <exclude>com/sun/tools/javac/launcher/**</exclude>
-            <exclude>com/sun/tools/javac/main/JavacToolProvider.java</exclude>
-            <exclude>com/sun/tools/sjavac/**</exclude>
-          </excludes>
-        </configuration>
-        <executions>
-          <execution>
-            <!-- the original SourceVersion uses Runtime.Version, the Java 8 variant (default-compile) cannot -->
-            <id>compile-sourceversion-java11</id>
-            <phase>compile</phase>
-            <goals>
-              <goal>compile</goal>
-            </goals>
-            <configuration>
-              <compileSourceRoots>
-                <compileSourceRoot>${project.build.directory}/sourceversion-java11</compileSourceRoot>
-              </compileSourceRoots>
-              <includes>
-                <include>javax/lang/model/SourceVersion.java</include>
-              </includes>
-              <target>11</target>
-              <useIncrementalCompilation>false</useIncrementalCompilation>
-              <outputDirectory>${project.build.outputDirectory}/META-INF/versions/11</outputDirectory>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.5.3</version>
-        <configuration>
-          <!-- like the former Ant junit task: a new JVM per test class -->
-          <reuseForks>false</reuseForks>
-          <!-- the same classes as the former Ant junit run -->
-          <includes>
-            <include>**/*Test.java</include>
-          </includes>
-        </configuration>
-      </plugin>
-      <plugin>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>3.5.0</version>
-        <!-- Establish reactor order without adding an API dependency to the published POM. -->
-        <dependencies>
-          <dependency>
-            <groupId>com.dukescript.nbjavac</groupId>
-            <artifactId>nb-javac-api</artifactId>
-            <version>${project.version}</version>
-          </dependency>
-        </dependencies>
-        <configuration>
-          <archive>
-            <addMavenDescriptor>false</addMavenDescriptor>
-          </archive>
-        </configuration>
-        <executions>
-          <execution>
-            <!-- the implementation jar is the main artifact, or a classified attachment for jdk21+ -->
-            <id>default-jar</id>
-            <configuration>
-              <finalName>${nbjavac.implementation.finalName}</finalName>
-              <includes>
-                <include>META-INF/services/**</include>
-                <include>META-INF/ct*/**</include>
-                <include>com/sun/tools/**</include>
-                <include>jdk/internal/shellsupport/**</include>
-                <include>jdk/internal/PreviewFeature*</include>
-                <include>nbjavac/**</include>
-                <include>README.md</include>
-                <include>SECURITY.md</include>
-              </includes>
-            </configuration>
-          </execution>
-          <execution>
-            <!-- the sources of nb-javac are the processed ones -->
-            <id>sources-jar</id>
-            <phase>package</phase>
-            <goals>
-              <goal>jar</goal>
-            </goals>
-            <configuration>
-              <classifier>sources</classifier>
-              <classesDirectory>${nbjavac.root}</classesDirectory>
-              <includes>
-                <include>src/main/java/**</include>
-                <include>src/test/java/**</include>
-                <include>src/test/resources/**</include>
-                <include>src/generated/java/java.base/**</include>
-                <include>src/generated/java/jdk.compiler/**</include>
-                <include>src/generated/java/java.compiler/**</include>
-                <include>src/main/resources/**</include>
-                <include>make/langtools/netbeans/nb-javac/**</include>
-                <include>make/langtools/tools/**</include>
-                <include>make/langtools/build.xml</include>
-                <include>make/langtools/build.properties</include>
-                <include>README.md</include>
-                <include>SECURITY.md</include>
-                <include>LICENSE.txt</include>
-                <include>CONTRIBUTING.md</include>
-              </includes>
-              <excludes>
-                <exclude>**/build/**</exclude>
-                <exclude>**/dist/**</exclude>
-              </excludes>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <artifactId>maven-failsafe-plugin</artifactId>
-        <version>3.5.3</version>
-        <configuration>
-          <systemPropertyVariables>
-            <nbjavac.api.jar>${project.build.directory}/${project.build.finalName}-api.jar</nbjavac.api.jar>
-            <nbjavac.api.module.jar>${nbjavac.root}/api/target/nb-javac-api-${project.version}.jar</nbjavac.api.module.jar>
-            <nbjavac.classes.dir>${project.build.outputDirectory}</nbjavac.classes.dir>
-            <nbjavac.implementation.jar>${project.build.directory}/${nbjavac.implementation.finalName}.jar</nbjavac.implementation.jar>
-            <nbjavac.ctsym.jar>${nbjavac.root}/ctsym/target/nb-javac-ctsym-${project.version}.jar</nbjavac.ctsym.jar>
-            <nbjavac.profile>${jackpot.profile}</nbjavac.profile>
-          </systemPropertyVariables>
-        </configuration>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>integration-test</goal>
-              <goal>verify</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <version>3.1.0</version>
-        <dependencies>
-          <!-- Ant 1.10.12 bundled with the plugin fails on JDK 24+ (Security Manager removed) -->
-          <dependency>
-            <groupId>org.apache.ant</groupId>
-            <artifactId>ant</artifactId>
-            <version>1.10.15</version>
-          </dependency>
-          <dependency>
-            <groupId>org.apache.ant</groupId>
-            <artifactId>ant-launcher</artifactId>
-            <version>1.10.15</version>
-          </dependency>
-        </dependencies>
-        <!--
-          All Maven properties, including -D ones (e.g. jdk.git.url, jdk.git.commit), are inherited by Ant.
-          The executions below only specify the Ant target to run.
-        -->
-        <configuration>
-          <target>
-            <ant dir="${nbjavac.ant.dir}" inheritAll="true"/>
-          </target>
-        </configuration>
-        <executions>
-          <execution>
-            <id>checkout-jdk</id>
-            <phase>initialize</phase>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <configuration>
-              <target>
-                <ant target="init"/>
-              </target>
-            </configuration>
-          </execution>
-          <execution>
-            <id>jackpot</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <configuration>
-              <target>
-                <ant target="generate-files"/>
-              </target>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
+      <plugin><groupId>net.nicoulaj.maven.plugins</groupId><artifactId>checksum-maven-plugin</artifactId><version>1.11</version></plugin>
     </plugins>
   </build>
   <profiles>
-    <profile>
-      <id>jdk8+</id>
-      <properties>
-        <jackpot.profile>jdk8+</jackpot.profile>
-        <jackpot.hint.files>nbjavac-jdk21.hint,nbjavac.hint</jackpot.hint.files>
-      </properties>
-    </profile>
+    <profile><id>jdk8+</id></profile>
     <profile>
       <id>jdk21+</id>
-      <properties>
-        <jackpot.profile>jdk21+</jackpot.profile>
-        <jackpot.hint.files>nbjavac-jdk21.hint</jackpot.hint.files>
-        <nbjavac.implementation.finalName>${project.build.finalName}-jdk21</nbjavac.implementation.finalName>
-      </properties>
-      <build>
-        <plugins>
-          <plugin>
-            <artifactId>maven-jar-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>default-jar</id>
-                <configuration>
-                  <finalName>${project.build.finalName}</finalName>
-                  <classifier>jdk21</classifier>
-                  <excludes>
-                    <exclude>nbjavac/jdk8/**</exclude>
-                  </excludes>
-                </configuration>
-              </execution>
-              <execution>
-                <id>sources-jar</id>
-                <configuration>
-                  <classifier>jdk21-sources</classifier>
-                </configuration>
-              </execution>
-              <execution>
-                <id>javadoc-jar</id>
-                <configuration>
-                  <attach>false</attach>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>build-helper-maven-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>attach-api-jar</id>
-                <phase>none</phase>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <artifactId>maven-install-plugin</artifactId>
-            <version>3.1.4</version>
-            <configuration>
-              <allowIncompleteProjects>true</allowIncompleteProjects>
-            </configuration>
-          </plugin>
-          <plugin>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <configuration>
-              <target>21</target>
-            </configuration>
-            <executions>
-              <execution>
-                <id>compile-sourceversion-java11</id>
-                <configuration>
-                  <skipMain>true</skipMain>
-                </configuration>
-              </execution>
-              <execution>
-                <id>default-testCompile</id>
-                <configuration>
-                  <compilerArgs combine.self="override">
-                    <arg>--limit-modules</arg>
-                    <arg>java.base,java.logging</arg>
-                  </compilerArgs>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
+      <properties><nbjavac.implementation.finalName>${project.build.finalName}-jdk21</nbjavac.implementation.finalName></properties>
     </profile>
     <profile>
-      <id>install-netbeans</id>
-      <activation>
-        <property>
-          <name>netbeans.dest.dir</name>
-        </property>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <artifactId>maven-antrun-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>install-netbeans</id>
-                <phase>install</phase>
-                <goals>
-                  <goal>run</goal>
-                </goals>
-                <configuration>
-                  <target combine.self="override">
-                    <ant dir="${nbjavac.ant.dir}" target="install-netbeans" inheritAll="true"/>
-                  </target>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
+      <id>install-netbeans</id><activation><property><name>netbeans.dest.dir</name></property></activation>
+      <build><plugins><plugin>
+        <artifactId>maven-antrun-plugin</artifactId><version>3.1.0</version>
+        <dependencies>
+          <dependency><groupId>org.apache.ant</groupId><artifactId>ant</artifactId><version>1.10.15</version></dependency>
+          <dependency><groupId>org.apache.ant</groupId><artifactId>ant-launcher</artifactId><version>1.10.15</version></dependency>
+        </dependencies>
+        <executions><execution>
+          <id>install-netbeans</id><phase>install</phase><goals><goal>run</goal></goals>
+          <configuration><target><ant dir="${nbjavac.ant.dir}" target="install-netbeans" inheritAll="true"/></target></configuration>
+        </execution></executions>
+      </plugin></plugins></build>
     </profile>
     <profile>
-      <!-- on JDK 8 the nb-javac classes have to precede the JDK's own javax.tools etc. -->
-      <id>jdk8-tests</id>
-      <activation>
-        <jdk>1.8</jdk>
-      </activation>
-      <properties>
-        <argLine>-Xbootclasspath/p:${project.build.outputDirectory}</argLine>
-      </properties>
-    </profile>
-    <profile>
-      <!-- hide the JDK's own jdk.compiler (and java.compiler), the tested nb-javac is on the classpath instead -->
-      <id>jdk9-tests</id>
-      <activation>
-        <jdk>[9,)</jdk>
-      </activation>
-      <properties>
-        <!-- java.management is needed by the surefire booter itself -->
-        <argLine>-Ddebug=false --limit-modules java.base,java.xml,jdk.zipfs,java.management,java.logging</argLine>
-      </properties>
-    </profile>
-    <profile>
-      <!--
-        Creates the Javadoc jar, signs artifacts, and generates checksums. See
-        README.md for publishing a bundle containing both profiles.
-      -->
       <id>release</id>
-      <build>
-        <plugins>
-          <plugin>
-            <!-- Central requires a javadoc jar, there is no Java API documentation of nb-javac to put in -->
-            <artifactId>maven-jar-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>javadoc-jar</id>
-                <phase>package</phase>
-                <goals>
-                  <goal>jar</goal>
-                </goals>
-                <configuration>
-                  <classifier>javadoc</classifier>
-                  <classesDirectory>${nbjavac.root}</classesDirectory>
-                  <includes>
-                    <include>README.md</include>
-                    <include>SECURITY.md</include>
-                    <include>LICENSE.txt</include>
-                    <include>CONTRIBUTING.md</include>
-                  </includes>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <artifactId>maven-gpg-plugin</artifactId>
-            <version>3.2.8</version>
-            <executions>
-              <execution>
-                <id>sign-artifacts</id>
-                <phase>verify</phase>
-                <goals>
-                  <goal>sign</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>net.nicoulaj.maven.plugins</groupId>
-            <artifactId>checksum-maven-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>checksum-installed-artifacts</id>
-                <phase>install</phase>
-                <goals>
-                  <goal>files</goal>
-                </goals>
-                <configuration>
-                  <fileSets>
-                    <fileSet>
-                      <directory>${settings.localRepository}/com/dukescript/nbjavac/${project.artifactId}/${project.version}</directory>
-                      <includes>
-                        <include>*.jar</include>
-                        <include>*.pom</include>
-                      </includes>
-                    </fileSet>
-                  </fileSets>
-                  <individualFilesOutputDirectory>${project.build.directory}/release-checksums</individualFilesOutputDirectory>
-                  <csvSummary>false</csvSummary>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <artifactId>maven-resources-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>install-checksums</id>
-                <phase>install</phase>
-                <goals>
-                  <goal>copy-resources</goal>
-                </goals>
-                <configuration>
-                  <outputDirectory>${settings.localRepository}/com/dukescript/nbjavac/${project.artifactId}/${project.version}</outputDirectory>
-                  <overwrite>true</overwrite>
-                  <resources>
-                    <resource>
-                      <directory>${project.build.directory}/release-checksums</directory>
-                      <includes>
-                        <include>${project.artifactId}-${project.version}*.jar.md5</include>
-                        <include>${project.artifactId}-${project.version}*.jar.sha1</include>
-                        <include>${project.artifactId}-${project.version}.pom.md5</include>
-                        <include>${project.artifactId}-${project.version}.pom.sha1</include>
-                      </includes>
-                    </resource>
-                  </resources>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
+      <build><plugins>
+        <plugin>
+          <artifactId>maven-jar-plugin</artifactId>
+          <executions><execution>
+            <id>javadoc-jar</id><phase>package</phase><goals><goal>jar</goal></goals>
+            <configuration>
+              <classifier>javadoc</classifier><classesDirectory>${nbjavac.root}</classesDirectory>
+              <includes><include>README.md</include><include>SECURITY.md</include><include>LICENSE.txt</include><include>CONTRIBUTING.md</include></includes>
+            </configuration>
+          </execution></executions>
+        </plugin>
+        <plugin>
+          <artifactId>maven-gpg-plugin</artifactId><version>3.2.8</version>
+          <executions><execution><id>sign-artifacts</id><phase>verify</phase><goals><goal>sign</goal></goals></execution></executions>
+        </plugin>
+        <plugin>
+          <groupId>net.nicoulaj.maven.plugins</groupId><artifactId>checksum-maven-plugin</artifactId>
+          <executions><execution>
+            <id>checksum-installed-artifacts</id><phase>install</phase><goals><goal>files</goal></goals>
+            <configuration>
+              <fileSets><fileSet>
+                <directory>${settings.localRepository}/com/dukescript/nbjavac/${project.artifactId}/${project.version}</directory>
+                <includes><include>*.jar</include><include>*.pom</include></includes>
+              </fileSet></fileSets>
+              <individualFilesOutputDirectory>${project.build.directory}/release-checksums</individualFilesOutputDirectory>
+              <csvSummary>false</csvSummary>
+            </configuration>
+          </execution></executions>
+        </plugin>
+        <plugin>
+          <artifactId>maven-resources-plugin</artifactId>
+          <executions><execution>
+            <id>install-checksums</id><phase>install</phase><goals><goal>copy-resources</goal></goals>
+            <configuration>
+              <outputDirectory>${settings.localRepository}/com/dukescript/nbjavac/${project.artifactId}/${project.version}</outputDirectory>
+              <overwrite>true</overwrite>
+              <resources><resource>
+                <directory>${project.build.directory}/release-checksums</directory>
+                <includes>
+                  <include>${project.artifactId}-${project.version}*.jar.md5</include>
+                  <include>${project.artifactId}-${project.version}*.jar.sha1</include>
+                  <include>${project.artifactId}-${project.version}.pom.md5</include>
+                  <include>${project.artifactId}-${project.version}.pom.sha1</include>
+                </includes>
+              </resource></resources>
+            </configuration>
+          </execution></executions>
+        </plugin>
+      </plugins></build>
     </profile>
   </profiles>
 </project>

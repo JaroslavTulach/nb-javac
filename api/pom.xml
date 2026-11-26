@@ -251,20 +251,5 @@
         </configuration>
       </plugin></plugins></build>
     </profile>
-    <profile>
-      <id>jdk21+</id>
-      <properties>
-        <jackpot.profile>jdk21+</jackpot.profile>
-        <jackpot.hint.files>nbjavac-jdk21.hint</jackpot.hint.files>
-      </properties>
-      <build><plugins><plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration><target>21</target></configuration>
-        <executions><execution>
-          <id>compile-sourceversion-java11</id>
-          <configuration><skipMain>true</skipMain></configuration>
-        </execution></executions>
-      </plugin></plugins></build>
-    </profile>
   </profiles>
 </project>
