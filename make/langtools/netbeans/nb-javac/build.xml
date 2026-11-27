@@ -47,7 +47,7 @@
         <checksum file="${jackpot.combined.hint.file}" algorithm="SHA-256"
                   property="jackpot.hint.checksum"/>
         <property name="jackpot.marker.expected"
-                  value="${jackpot.profile}|${jdk.git.commit}|${jackpot.hint.checksum}"/>
+                  value="${jackpot.profile}|${jdk.git.commit}|${jackpot.hint.checksum}|source-layout-2"/>
         <available property="jackpot.marker.exists" file="${src.dir}/jackpot-done"/>
     </target>
 
@@ -212,6 +212,7 @@
             <filterchain>
                  <replacestring from="package java.lang.runtime;" to="package nbjavac.jdk21;"/>
             </filterchain>
+            <mapper type="glob" from="java/lang/runtime/*" to="nbjavac/jdk21/*"/>
         </copy>
 
         <java fork="true" failonerror="true" classpath="${tools.dir}/jackpot.jar" classname="org.netbeans.modules.jackpot30.cmdline.Main">

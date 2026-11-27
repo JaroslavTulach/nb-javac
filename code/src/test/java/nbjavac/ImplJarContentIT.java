@@ -8,14 +8,19 @@
  */
 package nbjavac;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.zip.CRC32;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -155,9 +160,9 @@ public class ImplJarContentIT {
         assertTrue("JDK 8 classes were compiled for JDK 21",
                 !new File(target, "classes/nbjavac/jdk8").exists());
         try (JarFile sources = new JarFile(System.getProperty("nbjavac.sources21.jar"))) {
-            assertNotNull(sources.getEntry("src/main/java/nbjavac/jdk21/JDK21VMWrapper.java"));
+            assertNotNull(sources.getEntry("nbjavac/jdk21/JDK21VMWrapper.java"));
             assertTrue("JDK 8 emulation is present in the JDK 21 sources",
-                    sources.getEntry("src/main/java/nbjavac/jdk8/StringWrapper.java") == null);
+                    sources.getEntry("nbjavac/jdk8/StringWrapper.java") == null);
         }
     }
 
@@ -166,13 +171,40 @@ public class ImplJarContentIT {
         String sourcePath = System.getProperty(sourceProperty);
         assertNotNull(jarPath);
         assertNotNull(sourcePath);
-        String source = "java.compiler/share/classes/javax/tools/ToolProvider.java";
-        CRC32 crc = new CRC32();
-        crc.update(Files.readAllBytes(new File(sourcePath, source).toPath()));
         try (JarFile jar = new JarFile(jarPath)) {
-            JarEntry entry = jar.getJarEntry("src/generated/java/" + source);
-            assertNotNull("Missing generated source in " + jarPath, entry);
-            assertEquals("Generated source does not match " + sourceProperty, crc.getValue(), entry.getCrc());
+            checkGeneratedSource(jar, sourcePath, "java.compiler", "javax/tools/ToolProvider.java");
+            checkGeneratedSource(jar, sourcePath, "jdk.compiler", "com/sun/tools/javac/api/JavacTool.java");
+            checkGeneratedSource(jar, sourcePath, "java.base", "nbjavac/jdk21/ExactConversionsSupport.java");
+
+            Pattern packageName = Pattern.compile("^\\s*package\\s+([\\w.]+)\\s*;", Pattern.MULTILINE);
+            Enumeration<JarEntry> entries = jar.entries();
+            while (entries.hasMoreElements()) {
+                JarEntry entry = entries.nextElement();
+                if (!entry.getName().endsWith(".java")) {
+                    continue;
+                }
+                ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+                try (InputStream in = jar.getInputStream(entry)) {
+                    byte[] buffer = new byte[8192];
+                    int count;
+                    while ((count = in.read(buffer)) != -1) {
+                        bytes.write(buffer, 0, count);
+                    }
+                }
+                Matcher matcher = packageName.matcher(new String(bytes.toByteArray(), StandardCharsets.UTF_8));
+                if (matcher.find()) {
+                    assertTrue("Source path does not match package: " + entry.getName(),
+                            entry.getName().startsWith(matcher.group(1).replace('.', '/') + "/"));
+                }
+            }
         }
+    }
+
+    private void checkGeneratedSource(JarFile jar, String sourcePath, String module, String path) throws IOException {
+        CRC32 crc = new CRC32();
+        crc.update(Files.readAllBytes(new File(sourcePath, module + "/share/classes/" + path).toPath()));
+        JarEntry entry = jar.getJarEntry(path);
+        assertNotNull("Missing generated source " + path + " in " + jar.getName(), entry);
+        assertEquals("Generated source does not match " + sourcePath, crc.getValue(), entry.getCrc());
     }
 }

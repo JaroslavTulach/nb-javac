@@ -227,88 +227,6 @@
                                 </resources>
                             </configuration>
                         </execution>
-                        <execution>
-                            <id>copy-source-archive</id>
-                            <phase>prepare-package</phase>
-                            <goals>
-                                <goal>copy-resources</goal>
-                            </goals>
-                            <configuration>
-                                <outputDirectory>${project.build.directory}/source-archive</outputDirectory>
-                                <resources>
-                                    <resource>
-                                        <directory>${nbjavac.root}</directory>
-                                        <includes>
-                                            <include>make/langtools/netbeans/nb-javac/**</include>
-                                            <include>make/langtools/tools/**</include>
-                                            <include>make/langtools/build.xml</include>
-                                            <include>make/langtools/build.properties</include>
-                                            <include>README.md</include>
-                                            <include>SECURITY.md</include>
-                                            <include>LICENSE.txt</include>
-                                            <include>CONTRIBUTING.md</include>
-                                        </includes>
-                                        <excludes>
-                                            <exclude>**/build/**</exclude>
-                                            <exclude>**/dist/**</exclude>
-                                        </excludes>
-                                    </resource>
-                                </resources>
-                            </configuration>
-                        </execution>
-                        <execution>
-                            <id>copy-emulation-source-archive</id>
-                            <phase>prepare-package</phase>
-                            <goals>
-                                <goal>copy-resources</goal>
-                            </goals>
-                            <configuration>
-                                <outputDirectory>${project.build.directory}/source-archive/src/main</outputDirectory>
-                                <resources>
-                                    <resource>
-                                        <directory>${nbjavac.root}/runtime/emulation-jdk21/src/main</directory>
-                                    </resource>
-                                </resources>
-                            </configuration>
-                        </execution>
-                        <execution>
-                            <id>copy-test-source-archive</id>
-                            <phase>prepare-package</phase>
-                            <goals>
-                                <goal>copy-resources</goal>
-                            </goals>
-                            <configuration>
-                                <outputDirectory>${project.build.directory}/source-archive/src/test</outputDirectory>
-                                <resources>
-                                    <resource>
-                                        <directory>${nbjavac.root}/runtime/run-on-jdk8/src/test</directory>
-                                    </resource>
-                                    <resource>
-                                        <directory>${nbjavac.root}/code/src/test</directory>
-                                    </resource>
-                                </resources>
-                            </configuration>
-                        </execution>
-                        <execution>
-                            <id>copy-generated-source-archive</id>
-                            <phase>prepare-package</phase>
-                            <goals>
-                                <goal>copy-resources</goal>
-                            </goals>
-                            <configuration>
-                                <outputDirectory>${project.build.directory}/source-archive/src/generated/java</outputDirectory>
-                                <resources>
-                                    <resource>
-                                        <directory>${src.dir}</directory>
-                                        <includes>
-                                            <include>java.base/**</include>
-                                            <include>java.compiler/**</include>
-                                            <include>jdk.compiler/**</include>
-                                        </includes>
-                                    </resource>
-                                </resources>
-                            </configuration>
-                        </execution>
                     </executions>
                 </plugin>
                 <plugin>
@@ -402,16 +320,18 @@
                                 </includes>
                             </configuration>
                         </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>3.2.1</version>
+                    <executions>
                         <execution>
                             <id>sources-jar</id>
                             <phase>package</phase>
                             <goals>
-                                <goal>jar</goal>
+                                <goal>jar-no-fork</goal>
                             </goals>
-                            <configuration>
-                                <classifier>sources</classifier>
-                                <classesDirectory>${project.build.directory}/source-archive</classesDirectory>
-                            </configuration>
                         </execution>
                     </executions>
                 </plugin>

@@ -108,8 +108,8 @@ This step copies and transforms the OpenJDK sources separately for each project:
 
 After generation, the API project exposes these source roots in NetBeans as
 `Generated Sources (javac-api)` and `Generated Sources (javac-impl)`.
-Each `jackpot-done` marker records the profile, OpenJDK
-commit, and hint checksum. The emulation projects own the helper sources and
+Each `jackpot-done` marker records the profile, OpenJDK commit, hint checksum,
+and source layout version. The emulation projects own the helper sources and
 publish source JARs for the runtime projects. The JDK 8 runtime uses both
 emulation projects; the JDK 21 runtime uses only `emulation-jdk21`.
 `run-on-jdk8` owns the shared runtime tests and publishes their sources for
@@ -136,7 +136,9 @@ $ JAVA_HOME=/jdk-25/ mvn clean package
 The build produces `nb-javac-<version>.jar`,
 `nb-javac-<version>-jdk21.jar`, a shared `nb-javac-<version>-api.jar`,
 and `sources` and `jdk21-sources` JARs in `./code/target/`. All are
-installed under the original `nb-javac` coordinates.
+installed under the original `nb-javac` coordinates. The source JARs contain
+the transformed and emulation Java sources at their package paths, for IDE
+navigation and debugging.
 
 ### Maven repository staging in CI
 
