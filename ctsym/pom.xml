@@ -11,28 +11,41 @@
     <artifactId>nb-javac-ctsym</artifactId>
     <name>nb-javac ct.sym</name>
 
+    <properties>
+        <!-- CreateSymbols reads classes of the JDK being built, so it has to run on that very JDK version. -->
+        <ctsym.jdk.home>${user.home}/bin/jdk-28-ea</ctsym.jdk.home>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.8.1</version>
+                <!-- Declared first to generate ct.sym before the JAR is prepared in the same phase. -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.ant</groupId>
+                        <artifactId>ant</artifactId>
+                        <version>1.10.15</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.apache.ant</groupId>
+                        <artifactId>ant-launcher</artifactId>
+                        <version>1.10.15</version>
+                    </dependency>
+                </dependencies>
                 <executions>
                     <execution>
-                        <id>unpack-ct-sym</id>
+                        <id>generate-ct-sym</id>
                         <phase>initialize</phase>
                         <goals>
-                            <goal>unpack</goal>
+                            <goal>run</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.build.outputDirectory}</outputDirectory>
-                            <includes>META-INF/ct*/**</includes>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>org.frgaal</groupId>
-                                    <artifactId>compiler</artifactId>
-                                    <version>25.0.0</version>
-                                </artifactItem>
-                            </artifactItems>
+                            <target>
+                                <ant dir="${project.basedir}" inheritAll="true"/>
+                            </target>
                         </configuration>
                     </execution>
                 </executions>

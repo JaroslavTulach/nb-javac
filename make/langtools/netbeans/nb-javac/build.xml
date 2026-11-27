@@ -18,9 +18,12 @@
     <property name="tools.dir" location="${root}/lib"/>
     <property name="propertiesparser.classes.dir" location="${root}/lib/propertiesparser"/>
 
-    <target name="-check-properties">
+    <target name="-check-jdk-properties">
         <fail unless="jdk.git.url" message="Property jdk.git.url is not defined. Build with Maven (mvn) or specify -Djdk.git.url=..."/>
         <fail unless="jdk.git.commit" message="Property jdk.git.commit is not defined. Build with Maven (mvn) or specify -Djdk.git.commit=..."/>
+    </target>
+
+    <target name="-check-properties" depends="-check-jdk-properties">
         <fail message="Build tools are missing in ${tools.dir}. They are downloaded by Maven, run 'mvn initialize'.">
             <condition>
                 <not>
@@ -67,7 +70,7 @@
         </condition>
     </target>
 
-    <target name="-checkout-jdk" depends="-check-jdk.is.available" unless="jdk.is.available">
+    <target name="-checkout-jdk" depends="-check-jdk-properties,-check-jdk.is.available" unless="jdk.is.available">
         <exec failonerror="true" executable="git" dir="${jdk.repo}/..">
             <arg value="clone"/>
             <arg value="${jdk.git.url}"/>
@@ -78,6 +81,8 @@
             <arg value="${jdk.git.commit}"/>
         </exec>
     </target>
+
+    <target name="checkout-jdk" depends="-checkout-jdk" description="Checks the OpenJDK sources out, needs no build tools."/>
 
     <target name="init" depends="-check-properties,-checkout-jdk" description="Checks the OpenJDK sources out."/>
 

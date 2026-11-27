@@ -269,6 +269,7 @@
                 <version>3.5.3</version>
                 <configuration>
                     <systemPropertyVariables>
+                        <nbjavac.test.classes>${project.build.testOutputDirectory}</nbjavac.test.classes>
                         <nbjavac.api.jar>${project.build.directory}/${project.build.finalName}-api.jar</nbjavac.api.jar>
                         <nbjavac.api.module.jar>${nbjavac.root}/api/target/nb-javac-api-${project.version}.jar</nbjavac.api.module.jar>
                         <nbjavac.classes.dir>${nbjavac.root}/runtime/run-on-jdk8/target/classes</nbjavac.classes.dir>
