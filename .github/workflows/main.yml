@@ -7,6 +7,13 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v2
+      - name: Set up JDK 28 for ct.sym generation
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 28-ea
+      - name: Record JDK 28
+        run: echo "CTSYM_JDK=$JAVA_HOME" >> "$GITHUB_ENV"
       - name: Set up JDK 25
         uses: actions/setup-java@v4
         with:
@@ -14,7 +21,7 @@ jobs:
           java-version: 25.0.0
           cache: maven
       - name: Build both implementations
-        run: mvn -B package
+        run: mvn -B package -Dctsym.jdk.home="$CTSYM_JDK"
       - name: Prepare Maven staging inputs
         shell: bash
         run: |

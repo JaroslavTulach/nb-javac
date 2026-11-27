@@ -47,6 +47,14 @@ jobs:
       - name: Record JDK21
         run: echo "$JAVA_HOME" | tee jdk21 | tee jdk-46c1feab2c
 
+      - name: Set up JDK 28 for ct.sym generation
+        uses: actions/setup-java@v4
+        with:
+            distribution: 'zulu'
+            java-version: 28-ea
+      - name: Record JDK28
+        run: echo "CTSYM_JDK=$JAVA_HOME" >> "$GITHUB_ENV"
+
       - name: Set up JDK 25
         uses: actions/setup-java@v4
         with:
@@ -57,9 +65,9 @@ jobs:
         run: echo "$JAVA_HOME" | tee jdk25
 
       - name: Jackpot on JDK25
-        run: mvn -B clean generate-sources
+        run: mvn -B clean generate-sources -Dctsym.jdk.home="$CTSYM_JDK"
       - name: Finish Build on JDK8
-        run: JAVA_HOME=`cat jdk8` mvn -B package -DskipTests
+        run: JAVA_HOME=`cat jdk8` mvn -B package -DskipTests -Dctsym.jdk.home="$CTSYM_JDK"
 
       - name: Check NetBeans out
         run: |

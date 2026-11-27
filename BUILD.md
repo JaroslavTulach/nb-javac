@@ -42,8 +42,14 @@ implementations; `code` retains the
 `com.dukescript.nbjavac:nb-javac` artifact and assembles their JARs in
 `code/target`.
 
-The `ctsym` module repackages `META-INF/ct*` data from `org.frgaal:compiler`
-into `ctsym/target/nb-javac-ctsym-<version>.jar`. Both runtime modules unpack
+The `ctsym` module generates `META-INF/ct.sym` from the checked-out `jdk`
+sources by running its own `build.tools.symbolgenerator.CreateSymbols`, so the
+data covers JDK 8 up to the version of `jdk` (28 now). The generator reads the
+current API through the class-file API, thus it needs a **JDK 28** build
+(early access is fine) to run. Point to it with
+`-Dctsym.jdk.home=/path/to/jdk-28` (default `~/bin/jdk-28-ea`). The result is
+packaged as `ctsym/target/nb-javac-ctsym-<version>.jar`; generation is skipped
+when it is newer than its inputs. Both runtime modules unpack
 that JAR into their implementations. The `api` module builds the shared JDK
 8-compatible API, which `code` attaches as `nb-javac:jar:api`. When building
 only `code`, use `mvn -pl code -am ...` to build its prerequisites.

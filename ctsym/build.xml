@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Helper script called from pom.xml. It runs the JDK's own
+    build.tools.symbolgenerator.CreateSymbols to create ct.sym
+    for the JDK checked out in ../jdk and unpacks it to META-INF/ct.sym.
+    CreateSymbols needs to read classes of the very same JDK version, so it runs
+    on the JDK 28 specified by ctsym.jdk.home.
+    Do not call this script directly, use `mvn`.
+-->
+<project name="nb-javac-ctsym" default="generate" basedir=".">
+    <description>Generates ct.sym from the JDK sources.</description>
+
+    <!-- jdk.git.url, jdk.git.commit, ctsym.jdk.home and project.build.* are defined by pom.xml -->
+    <property name="root" location=".."/>
+    <property name="jdk.repo" location="${root}/jdk"/>
+    <property name="work.dir" location="${project.build.directory}/ctsym-work"/>
+    <property name="tools.src" location="src/tools"/>
+    <property name="symbols.dir" location="${jdk.repo}/src/jdk.compiler/share/data/symbols"/>
+    <property name="generator.src" location="${jdk.repo}/make/langtools/src/classes/build/tools/symbolgenerator"/>
+    <property name="ctsym.output" location="${project.build.outputDirectory}/META-INF/ct.sym"/>
+    <condition property="exe" value=".exe" else="">
+        <os family="windows"/>
+    </condition>
+
+    <target name="-checkout-jdk">
+        <ant dir="${root}/make/langtools/netbeans/nb-javac" target="checkout-jdk" inheritAll="true"/>
+    </target>
+
+    <target name="-read-version" depends="-checkout-jdk">
+        <loadproperties srcFile="${jdk.repo}/make/conf/version-numbers.conf">
+            <filterchain>
+                <linecontainsregexp>
+                    <regexp pattern="^DEFAULT_(VERSION_FEATURE|PROMOTED_VERSION_PRE)="/>
+                </linecontainsregexp>
+            </filterchain>
+        </loadproperties>
+        <exec executable="git" dir="${jdk.repo}" outputproperty="source.date.epoch" failonerror="true">
+            <arg value="log"/>
+            <arg value="-1"/>
+            <arg value="--format=%ct"/>
+        </exec>
+    </target>
+
+    <target name="-check-jdk" depends="-read-version">
+        <fail message="CreateSymbols has to run on JDK ${DEFAULT_VERSION_FEATURE}, but ${ctsym.jdk.home}/bin/java does not exist. Install JDK ${DEFAULT_VERSION_FEATURE} and specify -Dctsym.jdk.home=&lt;its home directory&gt;.">
+            <condition>
+                <not>
+                    <available file="${ctsym.jdk.home}/bin/java${exe}"/>
+                </not>
+            </condition>
+        </fail>
+        <exec executable="${ctsym.jdk.home}/bin/java${exe}" errorproperty="ctsym.jdk.version" failonerror="true">
+            <arg value="-version"/>
+        </exec>
+        <fail message="${ctsym.jdk.home} is not JDK ${DEFAULT_VERSION_FEATURE}, ct.sym has to be created by the same version as the sources in ${jdk.repo}. Found: ${ctsym.jdk.version}">
+            <condition>
+                <not>
+                    <contains string="${ctsym.jdk.version}" substring="&quot;${DEFAULT_VERSION_FEATURE}"/>
+                </not>
+            </condition>
+        </fail>
+    </target>
+
+    <target name="-check-uptodate" depends="-check-jdk">
+        <condition property="ctsym.uptodate">
+            <and>
+                <available file="${ctsym.output}" type="dir"/>
+                <uptodate targetfile="${work.dir}/ct.sym">
+                    <srcfiles dir="${symbols.dir}"/>
+                    <srcfiles dir="${generator.src}"/>
+                    <srcfiles file="${jdk.repo}/make/conf/docs-modules.conf"/>
+                    <srcfiles dir="${tools.src}"/>
+                </uptodate>
+            </and>
+        </condition>
+    </target>
+
+    <target name="-compile-generator" depends="-check-uptodate" unless="ctsym.uptodate">
+        <delete dir="${work.dir}"/>
+        <mkdir dir="${work.dir}/classes"/>
+        <javac srcdir="${generator.src}" includes="CreateSymbols.java" destdir="${work.dir}/classes"
+               fork="true" executable="${ctsym.jdk.home}/bin/javac${exe}" includeantruntime="false">
+            <compilerarg line="--add-modules jdk.compiler,jdk.jdeps -Xlint:-options"/>
+            <compilerarg value="--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED"/>
+            <compilerarg value="--add-exports=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED"/>
+            <compilerarg value="--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"/>
+            <compilerarg value="--add-exports=jdk.compiler/com.sun.tools.javac.jvm=ALL-UNNAMED"/>
+        </javac>
+    </target>
+
+    <target name="-prepare-inputs" depends="-compile-generator" unless="ctsym.uptodate">
+        <exec executable="${ctsym.jdk.home}/bin/jimage${exe}" failonerror="true">
+            <arg value="extract"/>
+            <arg value="--dir"/>
+            <arg value="${work.dir}/modules"/>
+            <arg value="${ctsym.jdk.home}/lib/modules"/>
+        </exec>
+        <exec executable="${ctsym.jdk.home}/bin/java${exe}" failonerror="true">
+            <arg value="${tools.src}/IncludedModules.java"/>
+            <arg value="${jdk.repo}/make/conf/docs-modules.conf"/>
+            <arg value="${work.dir}/included-modules"/>
+        </exec>
+    </target>
+
+    <target name="generate" depends="-prepare-inputs" unless="ctsym.uptodate"
+            description="Creates META-INF/ct.sym.">
+        <java classname="build.tools.symbolgenerator.CreateSymbols" fork="true" failonerror="true"
+              jvm="${ctsym.jdk.home}/bin/java${exe}">
+            <classpath location="${work.dir}/classes"/>
+            <jvmarg line="--add-modules jdk.compiler,jdk.jdeps"/>
+            <jvmarg value="--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED"/>
+            <jvmarg value="--add-exports=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED"/>
+            <jvmarg value="--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"/>
+            <jvmarg value="--add-exports=jdk.compiler/com.sun.tools.javac.jvm=ALL-UNNAMED"/>
+            <arg value="build-ctsym"/>
+            <arg value="${symbols.dir}/symbols"/>
+            <arg value="${work.dir}/ct.sym"/>
+            <arg value="${source.date.epoch}"/>
+            <arg value="${DEFAULT_VERSION_FEATURE}"/>
+            <arg value="${DEFAULT_PROMOTED_VERSION_PRE}"/>
+            <arg value="${work.dir}/modules"/>
+            <arg value="${work.dir}/included-modules"/>
+        </java>
+        <delete dir="${work.dir}/modules"/>
+        <delete dir="${ctsym.output}"/>
+        <unzip src="${work.dir}/ct.sym" dest="${ctsym.output}"/>
+    </target>
+</project>
