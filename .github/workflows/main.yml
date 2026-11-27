@@ -60,7 +60,7 @@ jobs:
       - name: Build patched JDK 25
         run: ./src/test/script/build-jdk.sh
 
-  test:
+  primary-tests:
     name: "Test ${{ matrix.module }} on JDK ${{ matrix.java }}"
     needs: build
     runs-on: ubuntu-24.04
@@ -70,6 +70,26 @@ jobs:
         include:
           - module: run-on-jdk8
             java: '8'
+          - module: run-on-jdk21
+            java: '21'
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/test-runtime
+        with:
+          module: ${{ matrix.module }}
+          java: ${{ matrix.java }}
+
+  sanity-tests:
+    name: "Test ${{ matrix.module }} on JDK ${{ matrix.java }}"
+    needs: [build, primary-tests]
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: ${{ github.workflow }}-sanity-${{ github.ref }}-${{ matrix.module }}-${{ matrix.java }}
+      cancel-in-progress: true
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
           - module: run-on-jdk8
             java: '11'
           - module: run-on-jdk8
@@ -79,53 +99,17 @@ jobs:
           - module: run-on-jdk8
             java: '25'
           - module: run-on-jdk21
-            java: '21'
-          - module: run-on-jdk21
             java: '25'
     steps:
       - uses: actions/checkout@v2
-      - name: Set up JDK ${{ matrix.java }}
-        uses: actions/setup-java@v4
+      - uses: ./.github/actions/test-runtime
         with:
-          distribution: zulu
-          java-version: ${{ matrix.java }}
-          cache: maven
-      - name: Download compiled classes
-        uses: actions/download-artifact@v4
-        with:
-          name: compiled-${{ matrix.module }}
-          path: runtime/${{ matrix.module }}/target/
-      - name: Download published JARs
-        uses: actions/download-artifact@v4
-        with:
-          name: maven-input
-          path: maven-staging/
-      - name: Run tests on prebuilt classes
-        run: mvn -B -pl runtime/${{ matrix.module }} surefire:test
-      - name: Test published API and implementation JARs
-        shell: bash
-        run: |
-          set -euo pipefail
-          api_jar=$(find maven-staging -name 'nb-javac-*-api.jar' -print -quit)
-          version=$(basename "$api_jar")
-          version=${version#nb-javac-}
-          version=${version%-api.jar}
-          impl="maven-staging/nb-javac-${version}.jar"
-          if [[ "${{ matrix.module }}" == "run-on-jdk21" ]]; then
-            impl="maven-staging/nb-javac-${version}-jdk21.jar"
-          fi
-          junit="$HOME/.m2/repository/junit/junit/4.12/junit-4.12.jar"
-          hamcrest="$HOME/.m2/repository/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar"
-          tests="runtime/${{ matrix.module }}/target/test-classes:$junit:$hamcrest"
-          if [[ "${{ matrix.java }}" == "8" ]]; then
-            java -Xbootclasspath/p:"$api_jar:$impl" -cp "$tests" org.junit.runner.JUnitCore com.sun.source.util.TreesTest com.sun.tools.javac.parser.JavacParserTest
-          else
-            java --limit-modules java.base,java.xml,jdk.zipfs,java.management,java.logging -cp "$api_jar:$impl:$tests" org.junit.runner.JUnitCore com.sun.source.util.TreesTest com.sun.tools.javac.parser.JavacParserTest
-          fi
+          module: ${{ matrix.module }}
+          java: ${{ matrix.java }}
 
   stage-maven-repository:
     name: Stage Maven repository layout
-    needs: [build, test]
+    needs: [build, primary-tests, sanity-tests]
     runs-on: ubuntu-24.04
     steps:
       - name: Download artifacts
