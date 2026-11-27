@@ -11,7 +11,7 @@
     <name>nb-javac parent</name>
     <properties>
         <jdk.git.url>https://github.com/openjdk/jdk</jdk.git.url>
-        <jdk.git.commit>jdk-28+25</jdk.git.commit>
+        <jdk.git.commit>jdk-28+26</jdk.git.commit>
         <revision>${jdk.git.commit}</revision>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.deploy.skip>true</maven.deploy.skip>
