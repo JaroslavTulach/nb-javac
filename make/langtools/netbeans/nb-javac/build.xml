@@ -38,7 +38,7 @@
         <property name="jackpot.combined.hint.file"
                   location="${nbjavac.output.dir}/nbjavac-${jackpot.profile}.hint"/>
         <concat destfile="${jackpot.combined.hint.file}" fixlastline="yes">
-            <filelist dir="${root}/src/main/resources/META-INF/upgrade"
+            <filelist dir="${root}/shared/src/main/resources/META-INF/upgrade"
                       files="${jackpot.hint.files}"/>
         </concat>
         <checksum file="${jackpot.combined.hint.file}" algorithm="SHA-256"
@@ -202,7 +202,7 @@
             <arg value="-hint-file"/>
             <arg value="${jackpot.combined.hint.file}"/>
             <arg value="-sourcepath"/>
-            <arg value="${root}/src/main/java/:${src.dir}/jdk.compiler/share/classes/:${src.dir}/java.compiler/share/classes:${src.dir}/java.base/share/classes"/>
+            <arg value="${root}/shared/src/main/java/:${src.dir}/jdk.compiler/share/classes/:${src.dir}/java.compiler/share/classes:${src.dir}/java.base/share/classes"/>
             <arg value="-source"/>
             <arg value="8"/>
             <arg value="--apply"/>

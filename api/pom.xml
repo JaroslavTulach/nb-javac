@@ -15,6 +15,7 @@
         <nbjavac.root>${project.basedir}/..</nbjavac.root>
         <nbjavac.output.dir>${project.build.directory}</nbjavac.output.dir>
         <nbjavac.ant.dir>${nbjavac.root}/make/langtools/netbeans/nb-javac</nbjavac.ant.dir>
+        <src.dir>${project.build.directory}/generated/java</src.dir>
         <jackpot.profile>jdk8+</jackpot.profile>
         <jackpot.hint.files>nbjavac-jdk21.hint,nbjavac.hint</jackpot.hint.files>
     </properties>
@@ -29,7 +30,7 @@
     </dependencies>
 
     <build>
-        <sourceDirectory>${nbjavac.root}/src/generated/java/java.compiler/share/classes</sourceDirectory>
+        <sourceDirectory>${src.dir}/java.compiler/share/classes</sourceDirectory>
         <resources>
             <resource>
                 <directory>${nbjavac.root}</directory>
@@ -70,6 +71,14 @@
             <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <version>3.8.1</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.dukescript.nbjavac</groupId>
+                        <artifactId>nb-javac-shared</artifactId>
+                        <version>${project.version}</version>
+                        <classifier>sources</classifier>
+                    </dependency>
+                </dependencies>
                 <executions>
                     <execution>
                         <id>download-tools</id>
@@ -85,6 +94,27 @@
                                     <artifactId>tool</artifactId>
                                     <version>28.0</version>
                                     <destFileName>jackpot.jar</destFileName>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>unpack-shared-sources</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/generated-shared</outputDirectory>
+                            <includes>nbjavac/**/*.java</includes>
+                            <overWriteReleases>true</overWriteReleases>
+                            <overWriteSnapshots>true</overWriteSnapshots>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>com.dukescript.nbjavac</groupId>
+                                    <artifactId>nb-javac-shared</artifactId>
+                                    <version>${project.version}</version>
+                                    <classifier>sources</classifier>
                                 </artifactItem>
                             </artifactItems>
                         </configuration>
@@ -151,9 +181,9 @@
                         </goals>
                         <configuration>
                             <sources>
-                                <source>${nbjavac.root}/src/generated/java/jdk.compiler/share/classes</source>
-                                <source>${nbjavac.root}/src/generated/java/java.base/share/classes</source>
-                                <source>${nbjavac.root}/src/main/java</source>
+                                <source>${src.dir}/jdk.compiler/share/classes</source>
+                                <source>${src.dir}/java.base/share/classes</source>
+                                <source>${project.build.directory}/generated-shared</source>
                             </sources>
                         </configuration>
                     </execution>

@@ -74,7 +74,6 @@
         </dependency>
     </dependencies>
     <build>
-        <testSourceDirectory>${nbjavac.root}/src/test/java</testSourceDirectory>
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>

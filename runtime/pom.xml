@@ -40,13 +40,6 @@
     </dependencies>
 
     <build>
-        <sourceDirectory>${nbjavac.root}/src/main/java</sourceDirectory>
-        <testSourceDirectory>${nbjavac.root}/src/test/java</testSourceDirectory>
-        <testResources>
-            <testResource>
-                <directory>${nbjavac.root}/src/test/resources</directory>
-            </testResource>
-        </testResources>
         <resources>
             <resource>
                 <directory>${nbjavac.root}</directory>
@@ -56,7 +49,12 @@
                 </includes>
             </resource>
             <resource>
-                <directory>${nbjavac.root}/src/main/resources</directory>
+                <directory>${project.build.directory}/generated-shared</directory>
+                <excludes>
+                    <exclude>**/*.java</exclude>
+                    <exclude>META-INF/MANIFEST.MF</exclude>
+                    <exclude>META-INF/maven/**</exclude>
+                </excludes>
             </resource>
             <resource>
                 <directory>${src.dir}/java.compiler/share/classes</directory>
@@ -86,8 +84,34 @@
                             <artifactId>nb-javac-ctsym</artifactId>
                             <version>${project.version}</version>
                         </dependency>
+                        <dependency>
+                            <groupId>com.dukescript.nbjavac</groupId>
+                            <artifactId>nb-javac-shared</artifactId>
+                            <version>${project.version}</version>
+                            <classifier>sources</classifier>
+                        </dependency>
                     </dependencies>
                     <executions>
+                        <execution>
+                            <id>unpack-shared-sources</id>
+                            <phase>initialize</phase>
+                            <goals>
+                                <goal>unpack</goal>
+                            </goals>
+                            <configuration>
+                                <outputDirectory>${project.build.directory}/generated-shared</outputDirectory>
+                                <overWriteReleases>true</overWriteReleases>
+                                <overWriteSnapshots>true</overWriteSnapshots>
+                                <artifactItems>
+                                    <artifactItem>
+                                        <groupId>com.dukescript.nbjavac</groupId>
+                                        <artifactId>nb-javac-shared</artifactId>
+                                        <version>${project.version}</version>
+                                        <classifier>sources</classifier>
+                                    </artifactItem>
+                                </artifactItems>
+                            </configuration>
+                        </execution>
                         <execution>
                             <id>unpack-reflect</id>
                             <phase>initialize</phase>
@@ -173,6 +197,7 @@
                                     <source>${src.dir}/java.compiler/share/classes</source>
                                     <source>${src.dir}/jdk.compiler/share/classes</source>
                                     <source>${src.dir}/java.base/share/classes</source>
+                                    <source>${project.build.directory}/generated-shared</source>
                                 </sources>
                             </configuration>
                         </execution>
@@ -212,10 +237,6 @@
                                     <resource>
                                         <directory>${nbjavac.root}</directory>
                                         <includes>
-                                            <include>src/main/java/**</include>
-                                            <include>src/test/java/**</include>
-                                            <include>src/test/resources/**</include>
-                                            <include>src/main/resources/**</include>
                                             <include>make/langtools/netbeans/nb-javac/**</include>
                                             <include>make/langtools/tools/**</include>
                                             <include>make/langtools/build.xml</include>
@@ -229,6 +250,39 @@
                                             <exclude>**/build/**</exclude>
                                             <exclude>**/dist/**</exclude>
                                         </excludes>
+                                    </resource>
+                                </resources>
+                            </configuration>
+                        </execution>
+                        <execution>
+                            <id>copy-shared-source-archive</id>
+                            <phase>prepare-package</phase>
+                            <goals>
+                                <goal>copy-resources</goal>
+                            </goals>
+                            <configuration>
+                                <outputDirectory>${project.build.directory}/source-archive/src/main</outputDirectory>
+                                <resources>
+                                    <resource>
+                                        <directory>${nbjavac.root}/shared/src/main</directory>
+                                    </resource>
+                                </resources>
+                            </configuration>
+                        </execution>
+                        <execution>
+                            <id>copy-test-source-archive</id>
+                            <phase>prepare-package</phase>
+                            <goals>
+                                <goal>copy-resources</goal>
+                            </goals>
+                            <configuration>
+                                <outputDirectory>${project.build.directory}/source-archive/src/test</outputDirectory>
+                                <resources>
+                                    <resource>
+                                        <directory>${nbjavac.root}/runtime/run-on-jdk8/src/test</directory>
+                                    </resource>
+                                    <resource>
+                                        <directory>${nbjavac.root}/code/src/test</directory>
                                     </resource>
                                 </resources>
                             </configuration>
