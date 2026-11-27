@@ -12,6 +12,9 @@
     <property name="root" location="../../../.."/>
     <property name="jdk.repo" location="${root}/jdk"/>
     <property name="src.dir" location="${root}/src/generated/java"/>
+    <property name="jdk.java.compiler.src" location="${src.dir}/java.compiler/share/classes"/>
+    <property name="jdk.jdk.compiler.src" location="${src.dir}/jdk.compiler/share/classes"/>
+    <property name="jdk.java.base.src" location="${src.dir}/java.base/share/classes"/>
     <property name="tools.dir" location="${root}/lib"/>
     <property name="propertiesparser.classes.dir" location="${root}/lib/propertiesparser"/>
 
@@ -55,7 +58,12 @@
             </filterchain>
         </loadfile>
         <condition property="jackpot.has.been.applied">
-            <equals arg1="${jackpot.marker.actual}" arg2="${jackpot.marker.expected}"/>
+            <and>
+                <equals arg1="${jackpot.marker.actual}" arg2="${jackpot.marker.expected}"/>
+                <available file="${jdk.java.compiler.src}" type="dir"/>
+                <available file="${jdk.jdk.compiler.src}" type="dir"/>
+                <available file="${jdk.java.base.src}" type="dir"/>
+            </and>
         </condition>
     </target>
 
@@ -130,8 +138,8 @@
 
     <target name="-check-generated-files">
         <uptodate property="generated.files.up.to.date"
-                  srcfile="${src.dir}/jdk.compiler/share/classes/com/sun/tools/javac/code/Flags.java"
-                  targetfile="${src.dir}/jdk.compiler/share/classes/com/sun/tools/javac/code/FlagsEnum.java" />
+                  srcfile="${jdk.jdk.compiler.src}/com/sun/tools/javac/code/Flags.java"
+                  targetfile="${jdk.jdk.compiler.src}/com/sun/tools/javac/code/FlagsEnum.java" />
     </target>
 
     <target name="generate-files" depends="jackpot,-check-generated-files" unless="generated.files.up.to.date"
@@ -147,17 +155,17 @@
         </path>
         <java failonerror="true" classpathref="propertiesparser" classname="propertiesparser.PropertiesParser">
             <arg value="-compile"/>
-            <arg value="${src.dir}/jdk.compiler/share/classes/com/sun/tools/javac/resources/compiler.properties"/>
-            <arg value="${src.dir}/jdk.compiler/share/classes/com/sun/tools/javac/resources/"/>
+            <arg value="${jdk.jdk.compiler.src}/com/sun/tools/javac/resources/compiler.properties"/>
+            <arg value="${jdk.jdk.compiler.src}/com/sun/tools/javac/resources/"/>
         </java>
         <java failonerror="true" classpathref="propertiesparser" classname="propertiesparser.PropertiesParser">
             <arg value="-compile"/>
-            <arg value="${src.dir}/jdk.compiler/share/classes/com/sun/tools/javac/resources/launcher.properties"/>
-            <arg value="${src.dir}/jdk.compiler/share/classes/com/sun/tools/javac/resources/"/>
+            <arg value="${jdk.jdk.compiler.src}/com/sun/tools/javac/resources/launcher.properties"/>
+            <arg value="${jdk.jdk.compiler.src}/com/sun/tools/javac/resources/"/>
         </java>
         <java failonerror="true" classpathref="propertiesparser" classname="flagsgenerator.FlagsGenerator" fork="true">
-            <arg value="${src.dir}/jdk.compiler/share/classes/com/sun/tools/javac/code/Flags.java"/>
-            <arg value="${src.dir}/jdk.compiler/share/classes/com/sun/tools/javac/code/FlagsEnum.java"/>
+            <arg value="${jdk.jdk.compiler.src}/com/sun/tools/javac/code/Flags.java"/>
+            <arg value="${jdk.jdk.compiler.src}/com/sun/tools/javac/code/FlagsEnum.java"/>
         </java>
     </target>
 
@@ -167,6 +175,8 @@
         <mkdir dir="${src.dir}"/>
         <copy todir="${src.dir}">
             <fileset dir="${jdk.repo}/src/">
+                <exclude name="java.compiler/share/classes/**"/>
+                <exclude name="jdk.compiler/share/classes/**"/>
                 <selector>
                     <and>
                         <or>
@@ -182,16 +192,22 @@
                 </selector>
             </fileset>
         </copy>
-        <copy todir="${src.dir}">
-            <fileset dir="${jdk.repo}/src/">
-                <selector>
-                    <and>
-                        <or>
-                            <filename name="java.base/share/classes/java/lang/runtime/ExactConversionsSupport.java"/>
-                        </or>
-                        <containsregexp expression="particular *file *as *subject *to *the.*Classpath.*exception"/>
-                    </and>
-                </selector>
+        <copy todir="${jdk.java.compiler.src}">
+            <fileset dir="${jdk.repo}/src/java.compiler/share/classes">
+                <exclude name="**/module-info.java"/>
+                <containsregexp expression="particular *file *as *subject *to *the.*Classpath.*exception"/>
+            </fileset>
+        </copy>
+        <copy todir="${jdk.jdk.compiler.src}">
+            <fileset dir="${jdk.repo}/src/jdk.compiler/share/classes">
+                <exclude name="**/module-info.java"/>
+                <containsregexp expression="particular *file *as *subject *to *the.*Classpath.*exception"/>
+            </fileset>
+        </copy>
+        <copy todir="${jdk.java.base.src}">
+            <fileset dir="${jdk.repo}/src/java.base/share/classes">
+                <include name="java/lang/runtime/ExactConversionsSupport.java"/>
+                <containsregexp expression="particular *file *as *subject *to *the.*Classpath.*exception"/>
             </fileset>
             <filterchain>
                  <replacestring from="package java.lang.runtime;" to="package nbjavac.jdk21;"/>
@@ -202,13 +218,13 @@
             <arg value="-hint-file"/>
             <arg value="${jackpot.combined.hint.file}"/>
             <arg value="-sourcepath"/>
-            <arg value="${nbjavac.output.dir}/generated-emulation/:${src.dir}/jdk.compiler/share/classes/:${src.dir}/java.compiler/share/classes:${src.dir}/java.base/share/classes"/>
+            <arg value="${nbjavac.output.dir}/generated-emulation/:${jdk.jdk.compiler.src}:${jdk.java.compiler.src}:${jdk.java.base.src}"/>
             <arg value="-source"/>
             <arg value="8"/>
             <arg value="--apply"/>
-            <arg value="${src.dir}/java.base/share/classes"/>
-            <arg value="${src.dir}/java.compiler/share/classes"/>
-            <arg value="${src.dir}/jdk.compiler/share/classes"/>
+            <arg value="${jdk.java.base.src}"/>
+            <arg value="${jdk.java.compiler.src}"/>
+            <arg value="${jdk.jdk.compiler.src}"/>
         </java>
         <echo file="${src.dir}/jackpot-done">${jackpot.marker.expected}</echo>
     </target>

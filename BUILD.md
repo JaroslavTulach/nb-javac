@@ -3,14 +3,17 @@
 The idea of the `nb-javac` build system is to take the JDK `javac` sources
 from its **official repository** and
 **automatically convert** them to run on _older JDKs_ (as old as JDK 8 right now).
-As a result:
-- the sources come from real JDK repository.
-- this `nbjavac` repository doesn't contain sources.
+The `javac` sources come from the OpenJDK checkout in `jdk/`. Make compiler
+bugfixes and features there and integrate them into the official JDK repository;
+do not edit the generated copies under `target/`.
 
-This repository only contains the build scripts and
-description of [advanced refactorings](https://netbeans.apache.org/jackpot/HintsFileFormat.html).
-Bugfixes, features and other changes to `javac` sources are supposed to be done
-in the `jdk` subdirectory and integrated into the JDK's `javac` **official repository**.
+The repository's own non-test Java sources used by nb-javac are the compatibility
+helpers in [`runtime/emulation-jdk8/src/main/java`](runtime/emulation-jdk8/src/main/java)
+and [`runtime/emulation-jdk21/src/main/java`](runtime/emulation-jdk21/src/main/java).
+Their [Jackpot refactorings](https://netbeans.apache.org/jackpot/HintsFileFormat.html)
+are in each project's `src/main/resources/META-INF/upgrade/` directory. Runtime
+tests are in [`runtime/run-on-jdk8/src/test`](runtime/run-on-jdk8/src/test).
+The repository also contains Java build tools under `make/langtools/tools/`.
 
 ```bash
 $ JAVA_HOME=/jdk-25/ mvn clean package
@@ -94,13 +97,21 @@ generates both:
 $ JAVA_HOME=/jdk-25/ mvn generate-sources
 ```
 
-This step copies the `javac` sources into `runtime/run-on-jdk8/target/generated/java`
-and `runtime/run-on-jdk21/target/generated/java`, then applies the respective
-transformations. Each `jackpot-done` marker records the profile, OpenJDK
-commit, and hint checksum. The API module generates its JDK 8-compatible
-sources in `api/target/generated/java`. The emulation projects own the helper
-sources and publish source JARs for the runtime projects. The JDK 8 runtime
-uses both emulation projects; the JDK 21 runtime uses only `emulation-jdk21`.
+This step copies and transforms the OpenJDK sources separately for each project:
+
+- API: `api/target/generated/java/javac-api` and
+  `api/target/generated/java/javac-impl` contain the API sources, including
+  `javax.tools` and `com.sun.source`, respectively.
+- Runtime implementations: `runtime/run-on-jdk8/target/generated/java` and
+  `runtime/run-on-jdk21/target/generated/java` contain their respective
+  transformed sources.
+
+After generation, the API project exposes these source roots in NetBeans as
+`Generated Sources (javac-api)` and `Generated Sources (javac-impl)`.
+Each `jackpot-done` marker records the profile, OpenJDK
+commit, and hint checksum. The emulation projects own the helper sources and
+publish source JARs for the runtime projects. The JDK 8 runtime uses both
+emulation projects; the JDK 21 runtime uses only `emulation-jdk21`.
 `run-on-jdk8` owns the shared runtime tests and publishes their sources for
 `run-on-jdk21` to compile and run, except for JDK 8 emulation-specific tests.
 

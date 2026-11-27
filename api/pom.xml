@@ -16,6 +16,9 @@
         <nbjavac.output.dir>${project.build.directory}</nbjavac.output.dir>
         <nbjavac.ant.dir>${nbjavac.root}/make/langtools/netbeans/nb-javac</nbjavac.ant.dir>
         <src.dir>${project.build.directory}/generated/java</src.dir>
+        <jdk.java.compiler.src>${src.dir}/javac-api</jdk.java.compiler.src>
+        <jdk.jdk.compiler.src>${src.dir}/javac-impl</jdk.jdk.compiler.src>
+        <jdk.java.base.src>${src.dir}/jdk-support</jdk.java.base.src>
         <jackpot.profile>jdk8+</jackpot.profile>
         <jackpot.hint.files>nbjavac-jdk21.hint,nbjavac.hint</jackpot.hint.files>
     </properties>
@@ -30,7 +33,6 @@
     </dependencies>
 
     <build>
-        <sourceDirectory>${src.dir}/java.compiler/share/classes</sourceDirectory>
         <resources>
             <resource>
                 <directory>${nbjavac.root}</directory>
@@ -192,8 +194,9 @@
                         </goals>
                         <configuration>
                             <sources>
-                                <source>${src.dir}/jdk.compiler/share/classes</source>
-                                <source>${src.dir}/java.base/share/classes</source>
+                                <source>${jdk.java.compiler.src}</source>
+                                <source>${jdk.jdk.compiler.src}</source>
+                                <source>${jdk.java.base.src}</source>
                                 <source>${project.build.directory}/generated-emulation</source>
                             </sources>
                         </configuration>
