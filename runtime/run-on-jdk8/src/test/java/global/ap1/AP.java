@@ -31,15 +31,12 @@ import java.io.Writer;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
-import javax.tools.Diagnostic.Kind;
 import javax.tools.JavaFileObject;
 
 /**
@@ -66,13 +63,13 @@ public class AP extends AbstractProcessor {
                 w = jfo.openWriter();
                 w.write(ann.content());
             } catch (IOException ex) {
-                Logger.getLogger(AP.class.getName()).log(Level.SEVERE, null, ex);
+                throw new IllegalStateException(ex);
             } finally {
                 if (w != null) {
                     try {
                         w.close();
                     } catch (IOException ex) {
-                        Logger.getLogger(AP.class.getName()).log(Level.SEVERE, null, ex);
+                        throw new IllegalStateException(ex);
                     }
                 }
             }

@@ -29,8 +29,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedSourceVersion;
@@ -55,7 +53,7 @@ public class ClassBasedAP extends AbstractProcessor {
 
                 jfo.openWriter().close();
             } catch (IOException ex) {
-                Logger.getLogger(ClassBasedAP.class.getName()).log(Level.SEVERE, null, ex);
+                throw new IllegalStateException(ex);
             }
         }
         return false;
