@@ -50,8 +50,8 @@ $ JAVA_HOME=/jdk-21/ mvn -pl runtime/run-on-jdk21 surefire:test
 # Publishing to Maven Central
 
 The artifacts use `com.dukescript.nbjavac:nb-javac` and the version defaults
-to `jdk.git.commit` (see [BUILD.md](BUILD.md)). To publish both implementation
-implementations together:
+to `jdk.git.commit` (see [BUILD.md](BUILD.md)). To publish both implementations
+together:
 
 1. Get an account at the [Central Portal](https://central.sonatype.com/) and
    register the `com.dukescript.nbjavac` namespace. Make a GPG signing key
@@ -60,27 +60,22 @@ implementations together:
    The [maven-gpg-plugin](https://maven.apache.org/plugins/maven-gpg-plugin/sign-mojo.html)
    selects the key, for example using `-Dgpg.keyname=...`.
 
-2. With JDK 25, install and sign both implementations:
+2. With JDK 25, sign both implementations and prepare the Central bundle:
    ```bash
-   JAVA_HOME=/jdk-25/ mvn clean install -Prelease
+   JAVA_HOME=/jdk-25/ mvn clean deploy -Prelease
    ```
-   This installs the JDK 8+ and `jdk21` implementations, shared API, both
-   sources JARs, Javadoc and POM. It also installs signatures and generates
-   MD5 and SHA-1 checksums; it does not upload anything.
+   The Central Publishing plugin creates
+   `code/target/central-publishing/central-bundle.zip` with both implementations,
+   the shared API, both sources JARs, Javadoc, POM, signatures and checksums.
+   The internal reactor modules are not included. Nothing is uploaded by default.
 
-3. Package the installed files as a Central bundle. This example uses the
-   default local Maven repository and version `jdk-28+25`; adjust them if
-   necessary. Use a new ZIP filename, as `zip` updates an existing archive.
-   ```bash
-   cd ~/.m2/repository
-   zip -r "$HOME/central-bundle.zip" com/dukescript/nbjavac/nb-javac/jdk-28+25
-   ```
-   Only the selected release is included, not cached dependencies or local
-   repository metadata.
-
-4. Upload `~/central-bundle.zip` through the
+3. Upload the ZIP through the
    [Central Portal](https://central.sonatype.org/publish/publish-portal-upload/),
    wait for validation, and release the deployment in the portal.
+
+   Alternatively, configure a Central Portal user token in Maven's `settings.xml`
+   under server ID `central` and add `-Dcentral.skipUpload=false` to the deploy
+   command. After upload and validation, release the deployment in the portal.
 
 # Install into a NetBeans distribution
 

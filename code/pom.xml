@@ -293,11 +293,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>net.nicoulaj.maven.plugins</groupId>
-                <artifactId>checksum-maven-plugin</artifactId>
-                <version>1.11</version>
-            </plugin>
         </plugins>
     </build>
     <profiles>
@@ -354,6 +349,10 @@
         </profile>
         <profile>
             <id>release</id>
+            <properties>
+                <maven.deploy.skip>false</maven.deploy.skip>
+                <central.skipUpload>true</central.skipUpload>
+            </properties>
             <build>
                 <plugins>
                     <plugin>
@@ -392,57 +391,14 @@
                         </executions>
                     </plugin>
                     <plugin>
-                        <groupId>net.nicoulaj.maven.plugins</groupId>
-                        <artifactId>checksum-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>checksum-installed-artifacts</id>
-                                <phase>install</phase>
-                                <goals>
-                                    <goal>files</goal>
-                                </goals>
-                                <configuration>
-                                    <fileSets>
-                                        <fileSet>
-                                            <directory>${settings.localRepository}/com/dukescript/nbjavac/${project.artifactId}/${project.version}</directory>
-                                            <includes>
-                                                <include>*.jar</include>
-                                                <include>*.pom</include>
-                                            </includes>
-                                        </fileSet>
-                                    </fileSets>
-                                    <individualFilesOutputDirectory>${project.build.directory}/release-checksums</individualFilesOutputDirectory>
-                                    <csvSummary>false</csvSummary>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <artifactId>maven-resources-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>install-checksums</id>
-                                <phase>install</phase>
-                                <goals>
-                                    <goal>copy-resources</goal>
-                                </goals>
-                                <configuration>
-                                    <outputDirectory>${settings.localRepository}/com/dukescript/nbjavac/${project.artifactId}/${project.version}</outputDirectory>
-                                    <overwrite>true</overwrite>
-                                    <resources>
-                                        <resource>
-                                            <directory>${project.build.directory}/release-checksums</directory>
-                                            <includes>
-                                                <include>${project.artifactId}-${project.version}*.jar.md5</include>
-                                                <include>${project.artifactId}-${project.version}*.jar.sha1</include>
-                                                <include>${project.artifactId}-${project.version}.pom.md5</include>
-                                                <include>${project.artifactId}-${project.version}.pom.sha1</include>
-                                            </includes>
-                                        </resource>
-                                    </resources>
-                                </configuration>
-                            </execution>
-                        </executions>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.12.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                            <skipUpload>${central.skipUpload}</skipUpload>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>
