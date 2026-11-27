@@ -74,7 +74,13 @@
                 <dependencies>
                     <dependency>
                         <groupId>com.dukescript.nbjavac</groupId>
-                        <artifactId>nb-javac-shared</artifactId>
+                        <artifactId>nb-javac-emulation-jdk21</artifactId>
+                        <version>${project.version}</version>
+                        <classifier>sources</classifier>
+                    </dependency>
+                    <dependency>
+                        <groupId>com.dukescript.nbjavac</groupId>
+                        <artifactId>nb-javac-emulation-jdk8</artifactId>
                         <version>${project.version}</version>
                         <classifier>sources</classifier>
                     </dependency>
@@ -99,20 +105,25 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>unpack-shared-sources</id>
+                        <id>unpack-emulation-sources</id>
                         <phase>initialize</phase>
                         <goals>
                             <goal>unpack</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.build.directory}/generated-shared</outputDirectory>
-                            <includes>nbjavac/**/*.java</includes>
+                            <outputDirectory>${project.build.directory}/generated-emulation</outputDirectory>
                             <overWriteReleases>true</overWriteReleases>
                             <overWriteSnapshots>true</overWriteSnapshots>
                             <artifactItems>
                                 <artifactItem>
                                     <groupId>com.dukescript.nbjavac</groupId>
-                                    <artifactId>nb-javac-shared</artifactId>
+                                    <artifactId>nb-javac-emulation-jdk21</artifactId>
+                                    <version>${project.version}</version>
+                                    <classifier>sources</classifier>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.dukescript.nbjavac</groupId>
+                                    <artifactId>nb-javac-emulation-jdk8</artifactId>
                                     <version>${project.version}</version>
                                     <classifier>sources</classifier>
                                 </artifactItem>
@@ -183,7 +194,7 @@
                             <sources>
                                 <source>${src.dir}/jdk.compiler/share/classes</source>
                                 <source>${src.dir}/java.base/share/classes</source>
-                                <source>${project.build.directory}/generated-shared</source>
+                                <source>${project.build.directory}/generated-emulation</source>
                             </sources>
                         </configuration>
                     </execution>

@@ -144,6 +144,23 @@ public class ImplJarContentIT {
         checkSources("nbjavac.sources21.jar", "nbjavac.generated21.dir");
     }
 
+    @Test
+    public void jdk21DoesNotUseJdk8Emulation() throws IOException {
+        String generated = System.getProperty("nbjavac.generated21.dir");
+        assertNotNull(generated);
+        File target = new File(generated).getParentFile().getParentFile();
+        assertTrue(new File(target, "generated-emulation/nbjavac/jdk21/JDK21VMWrapper.java").isFile());
+        assertTrue("JDK 8 sources were unpacked for JDK 21",
+                !new File(target, "generated-emulation/nbjavac/jdk8").exists());
+        assertTrue("JDK 8 classes were compiled for JDK 21",
+                !new File(target, "classes/nbjavac/jdk8").exists());
+        try (JarFile sources = new JarFile(System.getProperty("nbjavac.sources21.jar"))) {
+            assertNotNull(sources.getEntry("src/main/java/nbjavac/jdk21/JDK21VMWrapper.java"));
+            assertTrue("JDK 8 emulation is present in the JDK 21 sources",
+                    sources.getEntry("src/main/java/nbjavac/jdk8/StringWrapper.java") == null);
+        }
+    }
+
     private void checkSources(String jarProperty, String sourceProperty) throws IOException {
         String jarPath = System.getProperty(jarProperty);
         String sourcePath = System.getProperty(sourceProperty);

@@ -7,10 +7,16 @@
         <groupId>com.dukescript.nbjavac</groupId>
         <artifactId>nb-javac-parent</artifactId>
         <version>${revision}</version>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
-    <artifactId>nb-javac-shared</artifactId>
-    <name>nb-javac shared sources</name>
+    <artifactId>nb-javac-emulation-jdk21</artifactId>
+    <name>nb-javac JDK 21 emulation</name>
     <build>
+        <resources combine.self="override">
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -24,7 +30,7 @@
                 <version>3.2.1</version>
                 <executions>
                     <execution>
-                        <id>shared-sources</id>
+                        <id>emulation-sources</id>
                         <phase>initialize</phase>
                         <goals>
                             <goal>jar-no-fork</goal>

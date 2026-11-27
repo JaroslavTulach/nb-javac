@@ -20,6 +20,29 @@
         <plugins>
             <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.dukescript.nbjavac</groupId>
+                        <artifactId>nb-javac-emulation-jdk8</artifactId>
+                        <version>${project.version}</version>
+                        <classifier>sources</classifier>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <id>unpack-emulation-sources</id>
+                        <configuration>
+                            <artifactItems combine.children="append">
+                                <artifactItem>
+                                    <groupId>com.dukescript.nbjavac</groupId>
+                                    <artifactId>nb-javac-emulation-jdk8</artifactId>
+                                    <version>${project.version}</version>
+                                    <classifier>sources</classifier>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <artifactId>maven-antrun-plugin</artifactId>
@@ -30,6 +53,18 @@
             </plugin>
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-emulation-source-archive</id>
+                        <configuration>
+                            <resources combine.children="append">
+                                <resource>
+                                    <directory>${nbjavac.root}/runtime/emulation-jdk8/src/main</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -50,6 +85,13 @@
                         <goals>
                             <goal>test-jar-no-fork</goal>
                         </goals>
+                        <configuration>
+                            <excludes>
+                                <exclude>nbjavac/StringWrapperTest.java</exclude>
+                                <exclude>global/ModuleCheckingTest.java</exclude>
+                                <exclude>global/ap1/ModuleCheckingAP.java</exclude>
+                            </excludes>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

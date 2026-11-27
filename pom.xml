@@ -19,7 +19,6 @@
 
     <modules>
         <module>ctsym</module>
-        <module>shared</module>
         <module>api</module>
         <module>runtime</module>
         <module>code</module>

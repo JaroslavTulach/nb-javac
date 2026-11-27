@@ -12,6 +12,8 @@
     <packaging>pom</packaging>
     <name>nb-javac runtime build</name>
     <modules>
+        <module>emulation-jdk8</module>
+        <module>emulation-jdk21</module>
         <module>run-on-jdk8</module>
         <module>run-on-jdk21</module>
     </modules>
@@ -49,7 +51,7 @@
                 </includes>
             </resource>
             <resource>
-                <directory>${project.build.directory}/generated-shared</directory>
+                <directory>${project.build.directory}/generated-emulation</directory>
                 <excludes>
                     <exclude>**/*.java</exclude>
                     <exclude>META-INF/MANIFEST.MF</exclude>
@@ -86,26 +88,26 @@
                         </dependency>
                         <dependency>
                             <groupId>com.dukescript.nbjavac</groupId>
-                            <artifactId>nb-javac-shared</artifactId>
+                            <artifactId>nb-javac-emulation-jdk21</artifactId>
                             <version>${project.version}</version>
                             <classifier>sources</classifier>
                         </dependency>
                     </dependencies>
                     <executions>
                         <execution>
-                            <id>unpack-shared-sources</id>
+                            <id>unpack-emulation-sources</id>
                             <phase>initialize</phase>
                             <goals>
                                 <goal>unpack</goal>
                             </goals>
                             <configuration>
-                                <outputDirectory>${project.build.directory}/generated-shared</outputDirectory>
+                                <outputDirectory>${project.build.directory}/generated-emulation</outputDirectory>
                                 <overWriteReleases>true</overWriteReleases>
                                 <overWriteSnapshots>true</overWriteSnapshots>
                                 <artifactItems>
                                     <artifactItem>
                                         <groupId>com.dukescript.nbjavac</groupId>
-                                        <artifactId>nb-javac-shared</artifactId>
+                                        <artifactId>nb-javac-emulation-jdk21</artifactId>
                                         <version>${project.version}</version>
                                         <classifier>sources</classifier>
                                     </artifactItem>
@@ -197,7 +199,7 @@
                                     <source>${src.dir}/java.compiler/share/classes</source>
                                     <source>${src.dir}/jdk.compiler/share/classes</source>
                                     <source>${src.dir}/java.base/share/classes</source>
-                                    <source>${project.build.directory}/generated-shared</source>
+                                    <source>${project.build.directory}/generated-emulation</source>
                                 </sources>
                             </configuration>
                         </execution>
@@ -255,7 +257,7 @@
                             </configuration>
                         </execution>
                         <execution>
-                            <id>copy-shared-source-archive</id>
+                            <id>copy-emulation-source-archive</id>
                             <phase>prepare-package</phase>
                             <goals>
                                 <goal>copy-resources</goal>
@@ -264,7 +266,7 @@
                                 <outputDirectory>${project.build.directory}/source-archive/src/main</outputDirectory>
                                 <resources>
                                     <resource>
-                                        <directory>${nbjavac.root}/shared/src/main</directory>
+                                        <directory>${nbjavac.root}/runtime/emulation-jdk21/src/main</directory>
                                     </resource>
                                 </resources>
                             </configuration>

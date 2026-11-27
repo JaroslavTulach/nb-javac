@@ -32,9 +32,10 @@ the standard Maven lifecycle phases:
 | `package` | creates the shared API, both implementation and sources jars, and checks their consistency |
 | `verify` | with the `release` profile signs the artifacts (see the [README](README.md)) |
 
-The root `pom.xml` aggregates `ctsym`, `shared`, `api`, `runtime`, and `code`.
-The `runtime` project aggregates `run-on-jdk8` and `run-on-jdk21`, which compile and
-test the two implementations; `code` retains the
+The root `pom.xml` aggregates `ctsym`, `api`, `runtime`, and `code`.
+The `runtime` project aggregates `emulation-jdk8`, `emulation-jdk21`,
+`run-on-jdk8` and `run-on-jdk21`. The latter two compile and test the
+implementations; `code` retains the
 `com.dukescript.nbjavac:nb-javac` artifact and assembles their JARs in
 `code/target`.
 
@@ -83,8 +84,8 @@ a fresh copy of the `jdk` repository from scratch.
 ### Automatically processing the sources
 
 Once the JDK's `javac` sources are in the `jdk` subdirectory, `run-on-jdk8`
-combines the shared [JDK 21+ refactorings](./shared/src/main/resources/META-INF/upgrade/nbjavac-jdk21.hint)
-with the additional [JDK 8+ compatibility refactorings](./shared/src/main/resources/META-INF/upgrade/nbjavac.hint).
+combines the [JDK 21+ refactorings](./runtime/emulation-jdk21/src/main/resources/META-INF/upgrade/nbjavac-jdk21.hint)
+with the additional [JDK 8+ compatibility refactorings](./runtime/emulation-jdk8/src/main/resources/META-INF/upgrade/nbjavac.hint).
 `run-on-jdk21` applies only the shared set. The
 [Jackpot](https://netbeans.apache.org/jackpot/HintsFileFormat.html) phase
 generates both:
@@ -97,10 +98,11 @@ This step copies the `javac` sources into `runtime/run-on-jdk8/target/generated/
 and `runtime/run-on-jdk21/target/generated/java`, then applies the respective
 transformations. Each `jackpot-done` marker records the profile, OpenJDK
 commit, and hint checksum. The API module generates its JDK 8-compatible
-sources in `api/target/generated/java`. The `shared` project owns the helper
-sources; its source JAR is compiled independently by both runtime projects.
+sources in `api/target/generated/java`. The emulation projects own the helper
+sources and publish source JARs for the runtime projects. The JDK 8 runtime
+uses both emulation projects; the JDK 21 runtime uses only `emulation-jdk21`.
 `run-on-jdk8` owns the shared runtime tests and publishes their sources for
-`run-on-jdk21` to compile and run.
+`run-on-jdk21` to compile and run, except for JDK 8 emulation-specific tests.
 
 Generated sources shall not be edited manually. Instead, edit
 the sources in the original

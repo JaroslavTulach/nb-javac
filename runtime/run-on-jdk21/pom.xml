@@ -86,6 +86,9 @@
             </plugin>
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <failIfNoSpecifiedTests>false</failIfNoSpecifiedTests>
+                </configuration>
             </plugin>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -109,16 +112,6 @@
             </plugin>
             <plugin>
                 <artifactId>maven-jar-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>default-jar</id>
-                        <configuration>
-                            <excludes>
-                                <exclude>nbjavac/jdk8/**</exclude>
-                            </excludes>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
