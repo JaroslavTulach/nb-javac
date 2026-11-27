@@ -1,141 +1,129 @@
 name: CI
-#
-# Controls when the action will run. Triggers the workflow on push or pull request
-# events but only for the master branch
 on: [push, pull_request]
-#  push:
-#    branches: [ master ]
-jobs: 
+
+jobs:
   build:
-    name: "Build ${{ matrix.profile }} on JDK 25"
+    name: Build on JDK 25
     runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: false
-      matrix:
-        profile: ['jdk8+', 'jdk21+']
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 25
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v4
         with:
-            distribution: 'zulu'
-            java-version: 25.0.0
-      - name: Build profile
-        run: mvn -B package -P${{ matrix.profile }}
+          distribution: zulu
+          java-version: 25.0.0
+          cache: maven
+      - name: Build both implementations
+        run: mvn -B package
       - name: Prepare Maven staging inputs
         shell: bash
         run: |
           set -euo pipefail
-          main_jar_count=0
-          api_jar=""
-          implementation_jar=""
-          while IFS= read -r jar; do
-            main_jar_count=$((main_jar_count + 1))
-            if [[ "$jar" == *-api.jar ]]; then
-              api_jar="$jar"
-            else
-              implementation_jar="$jar"
-            fi
-          done < <(find target -maxdepth 1 -type f -name 'nb-javac-*.jar' ! -name '*-sources.jar' -print | sort)
-          if [[ "$main_jar_count" -ne 2 ]]; then
-            echo "Expected implementation and API JARs in target/, found $main_jar_count." >&2
+          api_jar=$(find code/target -maxdepth 1 -name 'nb-javac-*-api.jar' -print -quit)
+          if [[ -z "$api_jar" ]]; then
+            echo "No API JAR found in code/target/." >&2
             exit 1
           fi
-          if [[ -z "$api_jar" || -z "$implementation_jar" ]]; then
-            echo "Could not identify both implementation and API JARs in target/." >&2
-            exit 1
-          fi
-
-          sources_jar=$(find target -maxdepth 1 -type f -name 'nb-javac-*-sources.jar' -print -quit)
-          if [[ -z "$sources_jar" ]]; then
-            echo "No sources JAR found in target/." >&2
-            exit 1
-          fi
-
           version=$(basename "$api_jar")
           version=${version#nb-javac-}
           version=${version%-api.jar}
           mkdir -p maven-staging
-          cp "$implementation_jar" maven-staging/
-          cp "$api_jar" maven-staging/
-          cp "$sources_jar" maven-staging/
-          cp .flattened-pom.xml "maven-staging/nb-javac-${version}.pom"
+          for suffix in "" "-api" "-sources" "-jdk21" "-jdk21-sources"; do
+            cp "code/target/nb-javac-${version}${suffix}.jar" maven-staging/
+          done
+          cp code/.flattened-pom.xml "maven-staging/nb-javac-${version}.pom"
       - name: Upload Maven staging inputs
         uses: actions/upload-artifact@v4
         with:
-          name: maven-input-${{ matrix.profile }}
+          name: maven-input
           path: maven-staging/
           if-no-files-found: error
           retention-days: 1
-      - name: Upload compiled classes
+      - name: Upload JDK 8+ compiled classes
         uses: actions/upload-artifact@v4
         with:
-          name: compiled-${{ matrix.profile }}
-          path: target/
+          name: compiled-run-on-jdk8
+          path: |
+            runtime/run-on-jdk8/target/classes/
+            runtime/run-on-jdk8/target/test-classes/
           if-no-files-found: error
           retention-days: 1
-      - name: Build patched JDK25
-        run: ./build-jdk.sh
+      - name: Upload JDK 21+ compiled classes
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled-run-on-jdk21
+          path: |
+            runtime/run-on-jdk21/target/classes/
+            runtime/run-on-jdk21/target/test-classes/
+          if-no-files-found: error
+          retention-days: 1
+      - name: Build patched JDK 25
+        run: ./src/test/script/build-jdk.sh
 
-  test:
-    name: "Test ${{ matrix.profile }} on JDK ${{ matrix.java }}"
+  primary-tests:
+    name: "Test ${{ matrix.module }} on JDK ${{ matrix.java }}"
     needs: build
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
         include:
-          - profile: jdk8+
+          - module: run-on-jdk8
             java: '8'
-          - profile: jdk8+
+          - module: run-on-jdk21
+            java: '21'
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/test-runtime
+        with:
+          module: ${{ matrix.module }}
+          java: ${{ matrix.java }}
+
+  sanity-tests:
+    name: "Test ${{ matrix.module }} on JDK ${{ matrix.java }}"
+    needs: [build, primary-tests]
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: ${{ github.workflow }}-sanity-${{ github.ref }}-${{ matrix.module }}-${{ matrix.java }}
+      cancel-in-progress: true
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - module: run-on-jdk8
             java: '11'
-          - profile: jdk8+
+          - module: run-on-jdk8
             java: '17'
-          - profile: jdk8+
+          - module: run-on-jdk8
             java: '21'
-          - profile: jdk8+
+          - module: run-on-jdk8
             java: '25'
-          - profile: jdk21+
-            java: '21'
-          - profile: jdk21+
+          - module: run-on-jdk21
             java: '25'
     steps:
       - uses: actions/checkout@v2
-      - name: Set up JDK ${{ matrix.java }}
-        uses: actions/setup-java@v2
+      - uses: ./.github/actions/test-runtime
         with:
-            distribution: 'zulu'
-            java-version: ${{ matrix.java }}
-      - name: Download compiled classes
-        uses: actions/download-artifact@v4
-        with:
-          name: compiled-${{ matrix.profile }}
-          path: target/
-      - name: Run tests on prebuilt classes
-        run: mvn -B -P${{ matrix.profile }} surefire:test
+          module: ${{ matrix.module }}
+          java: ${{ matrix.java }}
 
   stage-maven-repository:
     name: Stage Maven repository layout
-    needs: [build, test]
+    needs: [build, primary-tests, sanity-tests]
     runs-on: ubuntu-24.04
     steps:
-      - name: Download JDK 8+ artifacts
+      - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: maven-input-jdk8+
-          path: profiles/jdk8+
-      - name: Download JDK 21+ artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: maven-input-jdk21+
-          path: profiles/jdk21+
+          name: maven-input
+          path: maven-input/
       - name: Assemble Maven repository tree
         shell: bash
         run: |
           set -euo pipefail
-          api_jar=$(find profiles/jdk8+ -maxdepth 1 -name 'nb-javac-*-api.jar' -print -quit)
+          api_jar=$(find maven-input -maxdepth 1 -name 'nb-javac-*-api.jar' -print -quit)
           if [[ -z "$api_jar" ]]; then
-            echo "No JDK 8+ API JAR found in profiles/jdk8+." >&2
+            echo "No API JAR found in maven-input/." >&2
             exit 1
           fi
           version=$(basename "$api_jar")
@@ -143,15 +131,7 @@ jobs:
           version=${version%-api.jar}
           repository="maven-repository/com/dukescript/nbjavac/nb-javac/${version}"
           mkdir -p "$repository"
-
-          cp "profiles/jdk8+/nb-javac-${version}.pom" "$repository/"
-          cp "profiles/jdk8+/nb-javac-${version}.jar" "$repository/"
-          cp "profiles/jdk8+/nb-javac-${version}-api.jar" "$repository/"
-          cp "profiles/jdk8+/nb-javac-${version}-sources.jar" "$repository/"
-
-          cp "profiles/jdk21+/nb-javac-${version}-jdk21.jar" "$repository/nb-javac-${version}-jdk21.jar"
-          cp "profiles/jdk21+/nb-javac-${version}-jdk21-sources.jar" "$repository/"
-
+          cp maven-input/* "$repository/"
           (
             cd maven-repository
             find com -type f -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS

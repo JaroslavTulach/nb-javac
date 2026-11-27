@@ -37,36 +37,21 @@ $ git checkout <release_tag_name>
 $ JAVA_HOME=/jdk-25/ mvn clean package
 ```
 
-By default this project enables `jdk8+` compatibility profile. Such a profile guarantees the
-generated `nb-javac` can run on JDK8+, but in order to do so, it needs to apply more tweaks
-to the original OpenJDK sources. If you are not interested in such a level of portability,
-feel free to use `-Pjdk21+` profile to select only the
-refactorings needed for JDK 21 and later.
+One build creates a shared `nb-javac-*-api.jar`, the JDK 8+ implementation
+`nb-javac-*.jar`, the JDK 21+ implementation `nb-javac-*-jdk21.jar`, and
+their sources JARs in `./code/target/`.
 
-The profiles share the Maven output directory. Run `mvn clean` when switching
-profiles so the next artifact cannot contain classes from the previous build.
-
+To test the prebuilt implementations on their target JDKs:
 ```bash
-$ JAVA_HOME=/jdk-25/ mvn clean package -Pjdk21+
+$ JAVA_HOME=/jdk-8/ mvn -pl runtime/run-on-jdk8 surefire:test
+$ JAVA_HOME=/jdk-21/ mvn -pl runtime/run-on-jdk21 surefire:test
 ```
-
-Two jars namely `nb-javac-*-api.jar` and `nb-javac-*.jar` (the implementation)
-are going to appear in the `./target/` directory. It is also possible to
-sanity test the generated Javac on JDK8 (in case of `jdk8+` profile being used):
-```bash
-$ JAVA_HOME=/jdk-8/ mvn surefire:test
-```
-The `package` phase also creates a sources JAR: `nb-javac-*-sources.jar`
-for `jdk8+`, or `nb-javac-*-jdk21-sources.jar` for `jdk21+`.
-
-There is one shared API JAR and two implementation JARs: one for `jdk8+` and
-one for `jdk21+`.
 
 # Publishing to Maven Central
 
 The artifacts use `com.dukescript.nbjavac:nb-javac` and the version defaults
-to `jdk.git.commit` (see [BUILD.md](BUILD.md)). To publish both implementation
-profiles together:
+to `jdk.git.commit` (see [BUILD.md](BUILD.md)). To publish both implementations
+together:
 
 1. Get an account at the [Central Portal](https://central.sonatype.com/) and
    register the `com.dukescript.nbjavac` namespace. Make a GPG signing key
@@ -75,30 +60,22 @@ profiles together:
    The [maven-gpg-plugin](https://maven.apache.org/plugins/maven-gpg-plugin/sign-mojo.html)
    selects the key, for example using `-Dgpg.keyname=...`.
 
-2. With JDK 25, install and sign both profiles, in this order:
+2. With JDK 25, sign both implementations and prepare the Central bundle:
    ```bash
-   JAVA_HOME=/jdk-25/ mvn clean install -Prelease
-   JAVA_HOME=/jdk-25/ mvn clean install -Prelease,jdk21+
+   JAVA_HOME=/jdk-25/ mvn clean deploy -Prelease
    ```
-   Use the same version and signing key for both commands. The first installs
-   the JDK 8+ implementation, shared API, sources, Javadoc and POM. The second
-   adds the `jdk21` implementation and `jdk21-sources` without replacing the
-   shared API, whose JDK 8+ build is needed for older runtimes. Both commands
-   also install signatures and generate MD5 and SHA-1 checksums; neither uploads anything.
+   The Central Publishing plugin creates
+   `code/target/central-publishing/central-bundle.zip` with both implementations,
+   the shared API, both sources JARs, Javadoc, POM, signatures and checksums.
+   The internal reactor modules are not included. Nothing is uploaded by default.
 
-3. Package the installed files as a Central bundle. This example uses the
-   default local Maven repository and version `jdk-28+25`; adjust them if
-   necessary. Use a new ZIP filename, as `zip` updates an existing archive.
-   ```bash
-   cd ~/.m2/repository
-   zip -r "$HOME/central-bundle.zip" com/dukescript/nbjavac/nb-javac/jdk-28+25
-   ```
-   Only the selected release is included, not cached dependencies or local
-   repository metadata.
-
-4. Upload `~/central-bundle.zip` through the
+3. Upload the ZIP through the
    [Central Portal](https://central.sonatype.org/publish/publish-portal-upload/),
    wait for validation, and release the deployment in the portal.
+
+   Alternatively, configure a Central Portal user token in Maven's `settings.xml`
+   under server ID `central` and add `-Dcentral.skipUpload=false` to the deploy
+   command. After upload and validation, release the deployment in the portal.
 
 # Install into a NetBeans distribution
 
